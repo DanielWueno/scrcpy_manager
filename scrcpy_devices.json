@@ -1,0 +1,17 @@
+{
+  "devices": [
+    {
+      "serial": "ZY22HQTHDB",
+      "name": "motorola moto g53 5G",
+      "alias": "Device_THDB",
+      "last_seen": "2025-07-15T11:26:10.247581"
+    },
+    {
+      "serial": "29151FDH30087C",
+      "name": "google Pixel 7 Pro",
+      "alias": "Device_087C",
+      "last_seen": "2025-07-15T11:26:10.247296"
+    }
+  ],
+  "last_updated": "2025-07-15T11:26:10.247588"
+}
