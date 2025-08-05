@@ -89,6 +89,33 @@ class ScrcpyManager:
         except:
             return "Información no disponible"
     
+    def silent_update_devices(self):
+        """Actualiza dispositivos silenciosamente sin mostrar mensajes"""
+        try:
+            connected = self.get_connected_devices()
+            new_devices_count = 0
+            
+            for serial in connected:
+                existing = next((d for d in self.devices if d['serial'] == serial), None)
+                if not existing:
+                    info = self.get_device_info(serial)
+                    device = {
+                        'serial': serial,
+                        'name': info,
+                        'alias': f"Device_{serial[-4:]}",
+                        'last_seen': datetime.now().isoformat()
+                    }
+                    self.devices.append(device)
+                    new_devices_count += 1
+                else:
+                    existing['last_seen'] = datetime.now().isoformat()
+            
+            if new_devices_count > 0:
+                self.save_devices()
+                print(f"ℹ️  Se detectaron {new_devices_count} dispositivo(s) nuevo(s)")
+        except:
+            pass  # Fallar silenciosamente
+
     def update_device_list(self):
         """Actualiza la lista de dispositivos conectados"""
         print("Buscando dispositivos conectados...")
@@ -122,44 +149,179 @@ class ScrcpyManager:
         
         self.save_devices()
     
-    def show_devices(self):
-        """Muestra lista de dispositivos"""
+    def show_devices(self, auto_update=True):
+        """Muestra lista de dispositivos con auto-actualización opcional"""
+        if auto_update:
+            # Buscar nuevos dispositivos silenciosamente
+            self.silent_update_devices()
+        
         if not self.devices:
-            print("No hay dispositivos guardados. Usa opción 1 para buscar.")
+            print("No hay dispositivos guardados.")
+            response = input("¿Buscar dispositivos ahora? (s/n): ").lower()
+            if response == 's':
+                self.update_device_list()
             return
         
         print("\nDispositivos disponibles:")
-        print("=" * 60)
+        print("=" * 70)
         
         connected = self.get_connected_devices()
         
         for i, device in enumerate(self.devices, 1):
-            status = "[CONECTADO]" if device['serial'] in connected else "[DESCONECTADO]"
-            print(f"{i:2d}. {device['alias']:<15} | {device['name']:<20} | {status}")
+            status = "🟢 CONECTADO" if device['serial'] in connected else "🔴 DESCONECTADO"
+            print(f"{i:2d}. {device['alias']:<15} | {device['name']:<25} | {status}")
             print(f"    Serial: {device['serial']}")
             print()
-    
+
+    def show_scrcpy_options_menu(self):
+        """Muestra menú interactivo para opciones de scrcpy"""
+        print("\n" + "=" * 50)
+        print("OPCIONES DE SCRCPY")
+        print("=" * 50)
+        print("1. 🔋 Mantener pantalla encendida (--stay-awake)")
+        print("2. 🖥️  Apagar pantalla del dispositivo (--turn-screen-off)")
+        print("3. 👆 Mostrar toques en pantalla (--show-touches)")
+        print("4. 🎬 Grabar sesión (--record)")
+        print("5. 📐 Limitar resolución (--max-size)")
+        print("6. 🌐 Ajustar bitrate (--bit-rate)")
+        print("7. 🖼️  Pantalla completa (--fullscreen)")
+        print("8. 📌 Ventana siempre encima (--always-on-top)")
+        print("9. 🔇 Sin audio (--no-audio) [Recomendado]")
+        print("0. ✅ Continuar con opciones seleccionadas")
+        print("=" * 50)
+        
+        selected_options = []
+        
+        while True:
+            try:
+                choice = input("\nSelecciona opción (0 para continuar): ").strip()
+                
+                if choice == '0':
+                    break
+                elif choice == '1':
+                    if '--stay-awake' not in selected_options:
+                        selected_options.append('--stay-awake')
+                        print("✅ Mantener pantalla encendida activado")
+                    else:
+                        selected_options.remove('--stay-awake')
+                        print("❌ Mantener pantalla encendida desactivado")
+                
+                elif choice == '2':
+                    if '--turn-screen-off' not in selected_options:
+                        selected_options.append('--turn-screen-off')
+                        print("✅ Apagar pantalla activado")
+                    else:
+                        selected_options.remove('--turn-screen-off')
+                        print("❌ Apagar pantalla desactivado")
+                
+                elif choice == '3':
+                    if '--show-touches' not in selected_options:
+                        selected_options.append('--show-touches')
+                        print("✅ Mostrar toques activado")
+                    else:
+                        selected_options.remove('--show-touches')
+                        print("❌ Mostrar toques desactivado")
+                
+                elif choice == '4':
+                    filename = input("Nombre del archivo (ej: grabacion.mp4): ").strip()
+                    if filename:
+                        # Remover grabación anterior si existe
+                        selected_options = [opt for opt in selected_options if not opt.startswith('--record=')]
+                        selected_options.append(f'--record={filename}')
+                        print(f"✅ Grabación activada: {filename}")
+                
+                elif choice == '5':
+                    size = input("Resolución máxima (ej: 1024, 800): ").strip()
+                    if size.isdigit():
+                        # Remover resolución anterior si existe
+                        selected_options = [opt for opt in selected_options if not opt.startswith('--max-size=')]
+                        selected_options.append(f'--max-size={size}')
+                        print(f"✅ Resolución máxima: {size}")
+                    else:
+                        print("❌ Valor no válido")
+                
+                elif choice == '6':
+                    bitrate = input("Bitrate (ej: 2M, 8M): ").strip()
+                    if bitrate:
+                        # Remover bitrate anterior si existe
+                        selected_options = [opt for opt in selected_options if not opt.startswith('--bit-rate=')]
+                        selected_options.append(f'--bit-rate={bitrate}')
+                        print(f"✅ Bitrate configurado: {bitrate}")
+                
+                elif choice == '7':
+                    if '--fullscreen' not in selected_options:
+                        selected_options.append('--fullscreen')
+                        print("✅ Pantalla completa activada")
+                    else:
+                        selected_options.remove('--fullscreen')
+                        print("❌ Pantalla completa desactivada")
+                
+                elif choice == '8':
+                    if '--always-on-top' not in selected_options:
+                        selected_options.append('--always-on-top')
+                        print("✅ Ventana siempre encima activada")
+                    else:
+                        selected_options.remove('--always-on-top')
+                        print("❌ Ventana siempre encima desactivada")
+                
+                elif choice == '9':
+                    if '--no-audio' not in selected_options:
+                        selected_options.append('--no-audio')
+                        print("✅ Sin audio activado")
+                    else:
+                        selected_options.remove('--no-audio')
+                        print("❌ Sin audio desactivado")
+                
+                else:
+                    print("❌ Opción no válida")
+                
+                # Mostrar opciones actuales
+                if selected_options:
+                    print(f"\n📋 Opciones actuales: {' '.join(selected_options)}")
+                
+            except ValueError:
+                print("❌ Entrada no válida")
+            except KeyboardInterrupt:
+                break
+        
+        return ' '.join(selected_options)
+
     def launch_scrcpy(self, device, options=""):
         """Lanza scrcpy para un dispositivo específico"""
         serial = device['serial']
-        base_cmd = [self.scrcpy_path, "--no-audio", f"--serial={serial}"]
+        
+        # Verificar si está conectado
+        connected = self.get_connected_devices()
+        if serial not in connected:
+            print(f"❌ ERROR: {device['alias']} no está conectado")
+            return False
+        
+        base_cmd = [self.scrcpy_path, f"--serial={serial}"]
+        
+        # Agregar --no-audio por defecto si no se especifica audio
+        if options and '--no-audio' not in options and '--audio' not in options:
+            base_cmd.append('--no-audio')
+        elif not options:
+            base_cmd.append('--no-audio')
         
         if options:
-            # Agregar opciones adicionales
             extra_options = options.split()
             base_cmd.extend(extra_options)
         
-        print(f"Iniciando scrcpy para {device['alias']}...")
-        print(f"Comando: {' '.join(base_cmd)}")
+        print(f"🚀 Iniciando scrcpy para {device['alias']}...")
+        print(f"📋 Comando: {' '.join(base_cmd)}")
         
         try:
             subprocess.Popen(base_cmd)
-            print(f"OK: Scrcpy iniciado para {device['alias']}")
+            print(f"✅ Scrcpy iniciado para {device['alias']}")
+            return True
         except FileNotFoundError:
-            print("ERROR: scrcpy.exe no encontrado. Verifica la ruta.")
+            print("❌ ERROR: scrcpy.exe no encontrado. Verifica la ruta.")
+            return False
         except Exception as e:
-            print(f"ERROR iniciando scrcpy: {e}")
-    
+            print(f"❌ ERROR iniciando scrcpy: {e}")
+            return False
+
     def launch_multiple(self, device_indices, options=""):
         """Lanza scrcpy para múltiples dispositivos"""
         if not device_indices:
@@ -252,11 +414,25 @@ class ScrcpyManager:
                     if self.devices:
                         device_idx = int(input("\nSelecciona dispositivo (número): ")) - 1
                         if 0 <= device_idx < len(self.devices):
-                            print("\nOpciones adicionales (opcional, presiona Enter para continuar):")
-                            options = input("Opciones: ").strip()
+                            print("\n¿Configurar opciones de scrcpy?")
+                            print("1. Usar configuración rápida (recomendado)")
+                            print("2. Configurar opciones personalizadas")
+                            print("3. Sin opciones adicionales")
+                            
+                            config_choice = input("Selecciona (1-3): ").strip()
+                            
+                            if config_choice == '1':
+                                # Configuración rápida recomendada
+                                options = "--stay-awake --show-touches --no-audio"
+                                print(f"📋 Usando configuración rápida: {options}")
+                            elif config_choice == '2':
+                                options = self.show_scrcpy_options_menu()
+                            else:
+                                options = ""
+                            
                             self.launch_scrcpy(self.devices[device_idx], options)
                         else:
-                            print("ERROR: Selección no válida")
+                            print("❌ ERROR: Selección no válida")
                 
                 elif choice == '4':
                     self.show_devices()
@@ -264,11 +440,25 @@ class ScrcpyManager:
                         indices_str = input("\nSelecciona dispositivos (ej: 1,3,4): ")
                         try:
                             indices = [int(x.strip()) for x in indices_str.split(',')]
-                            print("\nOpciones adicionales (opcional):")
-                            options = input("Opciones: ").strip()
+                            
+                            print("\n¿Configurar opciones de scrcpy para todos?")
+                            print("1. Usar configuración rápida (recomendado)")
+                            print("2. Configurar opciones personalizadas")
+                            print("3. Sin opciones adicionales")
+                            
+                            config_choice = input("Selecciona (1-3): ").strip()
+                            
+                            if config_choice == '1':
+                                options = "--stay-awake --show-touches --no-audio"
+                                print(f"📋 Usando configuración rápida: {options}")
+                            elif config_choice == '2':
+                                options = self.show_scrcpy_options_menu()
+                            else:
+                                options = ""
+                            
                             self.launch_multiple(indices, options)
                         except ValueError:
-                            print("ERROR: Formato no válido")
+                            print("❌ ERROR: Formato no válido")
                 
                 elif choice == '5':
                     self.manage_device_alias()
@@ -294,3 +484,4 @@ class ScrcpyManager:
 if __name__ == "__main__":
     manager = ScrcpyManager()
     manager.run()
+                            
