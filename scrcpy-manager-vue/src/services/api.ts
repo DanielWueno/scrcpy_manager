@@ -110,4 +110,29 @@ export const deviceApi = {
     >(`/devices/${serial}/status`);
     return response.data;
   },
+
+  // Actualizar alias del dispositivo
+  async updateDeviceAlias(serial: string, alias: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/devices/${serial}/alias`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ alias: alias.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating device alias:", error);
+      return {
+        success: false,
+        error: "Error de conexión al actualizar alias",
+      };
+    }
+  },
 };

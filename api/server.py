@@ -240,5 +240,45 @@ def get_device_status(serial):
             'error': str(e)
         }), 500
 
+@app.route('/api/devices/<serial>/alias', methods=['PUT'])
+def update_device_alias(serial):
+    """Actualiza el alias de un dispositivo"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'alias' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Se requiere el campo "alias"'
+            }), 400
+        
+        alias = data['alias'].strip()
+        if not alias:
+            return jsonify({
+                'success': False,
+                'error': 'El alias no puede estar vacío'
+            }), 400
+        
+        # Actualizar alias usando el device manager
+        success = device_manager.update_device_alias(serial, alias)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Alias actualizado a "{alias}"'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Dispositivo no encontrado'
+            }), 404
+            
+    except Exception as e:
+        logger.error(f"Error actualizando alias: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)

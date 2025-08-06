@@ -1,12 +1,10 @@
-<!-- filepath: c:\Users\DSOFT03.CORP\Documents\Soft\scrcpy_manager\scrcpy-manager-vue\scrcpy-manager-vue\src\App.vue -->
 <template>
   <v-app>
-    <!-- App Bar con gradiente y efectos geniales -->
     <v-app-bar
       :elevation="8"
-      style="background: linear-gradient(135deg, #ff6b35 0%, #004e89 100%)"
       dark
       height="80"
+      class="gradient-bg"
     >
       <template v-slot:prepend>
         <v-avatar
@@ -16,25 +14,26 @@
           <v-icon
             size="30"
             color="white"
-            >mdi-cellphone-wireless</v-icon
           >
+            mdi-cellphone-wireless
+          </v-icon>
         </v-avatar>
       </template>
 
       <v-app-bar-title class="text-h4 font-weight-bold">
         <span class="gradient-text">Scrcpy Manager</span>
-        <div class="text-subtitle-2 opacity-80">Pro Device Control</div>
+        <div class="text-subtitle-2 opacity-80">Device Control</div>
       </v-app-bar-title>
 
       <v-spacer />
 
-      <!-- Botones con efectos hover -->
       <v-btn
-        @click="toggleTheme"
         icon
         variant="text"
         class="mx-1 hover-btn"
         size="large"
+        color="white"
+        @click="toggleTheme"
       >
         <v-icon>{{
           isDark ? "mdi-weather-sunny" : "mdi-weather-night"
@@ -42,13 +41,14 @@
       </v-btn>
 
       <v-btn
-        @click="manualRefresh"
         :loading="loading"
         icon
         variant="text"
         class="mx-1 hover-btn"
         size="large"
         title="Actualizar dispositivos manualmente"
+        color="white"
+        @click="manualRefresh"
       >
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
@@ -58,19 +58,18 @@
         variant="text"
         class="mx-1 hover-btn"
         size="large"
+        color="white"
       >
         <v-icon>mdi-cog</v-icon>
       </v-btn>
     </v-app-bar>
 
     <v-main>
-      <!-- Estado de conexión API con mejor diseño -->
       <ConnectionStatus ref="connectionStatus" />
 
-      <!-- Contenido principal con efectos visuales -->
       <v-container
         fluid
-        class="pa-6"
+        class="pa-5"
         style="
           background: linear-gradient(
             180deg,
@@ -80,7 +79,6 @@
         "
       >
         <v-row>
-          <!-- Panel de dispositivos mejorado -->
           <v-col
             cols="12"
             md="8"
@@ -91,22 +89,31 @@
               rounded="xl"
             >
               <v-card-title class="pa-6">
-                <v-icon
-                  left
-                  size="30"
-                  color="primary"
-                  >mdi-devices</v-icon
-                >
-                <span class="text-h5 font-weight-bold ml-3"
-                  >Dispositivos Conectados</span
-                >
+                <div class="d-flex align-center">
+                  <v-icon
+                    left
+                    size="30"
+                    color="primary"
+                  >
+                    mdi-devices
+                  </v-icon>
+                  <span class="text-h5 font-weight-bold ml-3"
+                    >Dispositivos Conectados</span
+                  >
+                </div>
                 <v-spacer />
                 <v-chip
                   :color="devices.length > 0 ? 'success' : 'warning'"
                   variant="flat"
-                  class="pulse-animation"
                 >
-                  <v-icon left>mdi-circle</v-icon>
+                  <div class="d-flex align-center">
+                    <v-icon
+                      left
+                      class="pr-1 mr-1"
+                    >
+                      mdi-circle
+                    </v-icon>
+                  </div>
                   {{ devices.length }} dispositivos
                 </v-chip>
               </v-card-title>
@@ -123,7 +130,6 @@
             </v-card>
           </v-col>
 
-          <!-- Panel de control mejorado -->
           <v-col
             cols="12"
             md="4"
@@ -133,34 +139,39 @@
               class="glass-card control-panel"
               rounded="xl"
             >
-              <v-card-title class="pa-6 control-header">
+              <v-card-title
+                class="pa-7 gradient-bg text-white d-flex align-center"
+              >
                 <v-icon
                   left
                   size="30"
-                  color="secondary"
-                  >mdi-tune-variant</v-icon
+                  color="white"
                 >
-                <span class="text-h5 font-weight-bold ml-3"
-                  >Panel de Control</span
-                >
+                  mdi-tune-variant
+                </v-icon>
+                <span class="text-h5 font-weight-bold ml-3">
+                  Panel de Control
+                </span>
               </v-card-title>
 
               <v-divider />
 
               <v-card-text class="pa-6">
-                <!-- Herramientas con efectos -->
                 <div class="tool-section mb-6">
                   <v-card
                     variant="tonal"
                     class="pa-4 rounded-lg"
                     color="primary"
                   >
-                    <v-card-title class="pa-0 text-h6 mb-3">
+                    <v-card-title
+                      class="pa-0 text-h6 mb-3 font-weight-bold d-flex align-center"
+                    >
                       <v-icon
                         left
-                        color="white"
-                        >mdi-wrench</v-icon
+                        class="mr-3"
                       >
+                        mdi-wrench
+                      </v-icon>
                       Herramientas
                     </v-card-title>
                     <ToolbarFrame
@@ -172,28 +183,28 @@
                   </v-card>
                 </div>
 
-                <!-- Configuración rápida con estilo -->
                 <div class="config-section mb-6">
                   <v-card
                     variant="tonal"
                     class="pa-4 rounded-lg"
                     color="accent"
                   >
-                    <v-card-title class="pa-0 text-h6 mb-3">
+                    <v-card-title
+                      class="pa-0 text-h6 mb-3 font-weight-bold d-flex align-center"
+                    >
                       <v-icon
                         left
-                        color="white"
-                        >mdi-lightning-bolt</v-icon
+                        class="mr-3"
                       >
+                        mdi-lightning-bolt
+                      </v-icon>
                       Configuración Rápida
                     </v-card-title>
                     <QuickConfig v-model="connectionOptions" />
                   </v-card>
                 </div>
 
-                <!-- Botón de conexión súper chido -->
                 <v-btn
-                  @click="toggleConnection"
                   :disabled="!isDeviceSelected || actionLoading"
                   :loading="actionLoading"
                   :color="isDeviceActive ? 'error' : 'success'"
@@ -203,10 +214,12 @@
                   class="mb-6 connection-btn"
                   rounded="xl"
                   elevation="8"
+                  @click="toggleConnection"
                 >
                   <v-icon
                     left
                     size="25"
+                    class="mr-3"
                   >
                     {{
                       isDeviceActive ? "mdi-lan-disconnect" : "mdi-lan-connect"
@@ -215,21 +228,26 @@
                   {{ connectionButtonText }}
                 </v-btn>
 
-                <!-- Info del dispositivo con mejor diseño -->
                 <v-card
                   variant="tonal"
                   class="pa-4 rounded-lg"
                   color="info"
                 >
-                  <v-card-title class="pa-0 text-h6 mb-3">
+                  <v-card-title
+                    class="pa-0 text-h6 mb-3 font-weight-bold d-flex align-center"
+                  >
                     <v-icon
                       left
-                      color="white"
-                      >mdi-information</v-icon
+                      class="mr-3"
                     >
+                      mdi-information
+                    </v-icon>
                     Información del Dispositivo
                   </v-card-title>
-                  <DeviceInfo :device="selectedDevice" />
+                  <DeviceInfo
+                    :device="selectedDevice"
+                    @alias-updated="handleAliasUpdated"
+                  />
                 </v-card>
               </v-card-text>
             </v-card>
@@ -238,7 +256,6 @@
       </v-container>
     </v-main>
 
-    <!-- Toast notifications -->
     <div class="toast-container">
       <v-slide-y-transition group>
         <v-alert
@@ -246,9 +263,9 @@
           :key="toast.id"
           :type="toast.type"
           closable
-          @click:close="removeToast(toast.id)"
           class="mb-2"
           :value="true"
+          @click:close="removeToast(toast.id)"
         >
           {{ toast.message }}
         </v-alert>
@@ -280,16 +297,19 @@
     isDeviceSelected,
     isDeviceActive,
     connectionButtonText,
-    showToast,
     removeToast,
     refreshDevices,
     manualRefresh,
     selectDevice,
+    updateDeviceAlias,
     toggleConnection,
     executeDeviceAction,
   } = useDeviceManager();
 
-  // Función para manejar acciones con payload personalizado
+  const handleAliasUpdated = async (serial: string, alias: string) => {
+    await updateDeviceAlias(serial, alias);
+  };
+
   const executeDeviceActionWithPayload = (
     action: DeviceAction,
     payload: any
@@ -297,7 +317,6 @@
     executeDeviceAction(action, payload);
   };
 
-  // Función para cambiar tema
   const isDark = computed(() => theme.global.name.value === "dark");
 
   const toggleTheme = () => {
@@ -310,7 +329,7 @@
   let isPageVisible = ref(true);
   let lastActivityTime = ref(Date.now());
 
-  // Smart refresh: ajusta la frecuencia basado en actividad
+  // Refresh: ajusta la frecuencia basado en actividad
   const getRefreshInterval = () => {
     const timeSinceActivity = Date.now() - lastActivityTime.value;
     if (timeSinceActivity < 30000) {
@@ -320,7 +339,7 @@
       // Últimos 5 minutos
       return 15000; // 15 segundos si actividad moderada
     } else {
-      return 60000; // 1 minuto si no hay actividad
+      return 600000; // 10 minutos si no hay actividad
     }
   };
 
@@ -330,17 +349,14 @@
         refreshDevices();
       }
 
-      // Reconfigurar con nuevo intervalo basado en actividad
       clearInterval(refreshInterval);
       const newInterval = getRefreshInterval();
-      console.log(`🔄 Refresh inteligente: próximo en ${newInterval / 1000}s`);
+      console.log(`Refresh: próximo en ${newInterval / 1000}s`);
       refreshInterval = setInterval(refresh, newInterval);
     };
 
     const initialInterval = getRefreshInterval();
-    console.log(
-      `🔄 Iniciando refresh inteligente cada ${initialInterval / 1000}s`
-    );
+    console.log(`Iniciando refresh cada ${initialInterval / 1000}s`);
     refreshInterval = setInterval(refresh, initialInterval);
   };
 
@@ -348,11 +364,9 @@
     lastActivityTime.value = Date.now();
   };
 
-  // Detectar visibilidad de la página
   const handleVisibilityChange = () => {
     isPageVisible.value = !document.hidden;
     if (isPageVisible.value) {
-      // Cuando la página vuelve a ser visible, hacer refresh inmediato
       refreshDevices();
       updateActivity();
     }
@@ -361,13 +375,10 @@
   onMounted(async () => {
     await refreshDevices();
 
-    // Configurar refresh inteligente
     startSmartRefresh();
 
-    // Escuchar cambios de visibilidad
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Actualizar actividad en interacciones del usuario
     document.addEventListener("click", updateActivity);
     document.addEventListener("keydown", updateActivity);
   });
@@ -383,32 +394,35 @@
 </script>
 
 <style scoped>
-  /* Gradientes y efectos chidos */
+  .gradient-bg {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--v-theme-primary)) 0%,
+      rgb(var(--v-theme-accent)) 100%
+    ) !important;
+  }
+
   .gradient-text {
-    background: linear-gradient(45deg, #ffffff, #ffeb3b);
+    background: white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    color: transparent;
   }
 
-  /* Efectos de cristal (glassmorphism) */
   .glass-card {
     backdrop-filter: blur(20px);
     background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
   }
 
-  /* Botones con hover súper chidos */
   .hover-btn {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    transition: transform 0.2s;
   }
 
   .hover-btn::before {
@@ -430,12 +444,7 @@
   }
 
   .hover-btn:hover {
-    transform: scale(1.1);
-  }
-
-  /* Animación de pulso para chips */
-  .pulse-animation {
-    animation: pulse 2s infinite;
+    transform: scale(1.04);
   }
 
   @keyframes pulse {
@@ -450,7 +459,6 @@
     }
   }
 
-  /* Botón de conexión con efectos especiales */
   .connection-btn {
     position: relative;
     overflow: hidden;
@@ -482,7 +490,6 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
 
-  /* Paneles con animaciones */
   .device-panel {
     animation: slideInLeft 0.6s ease-out;
   }
@@ -513,13 +520,15 @@
     }
   }
 
-  /* Header del control panel */
   .control-header {
-    background: linear-gradient(135deg, #ff6b35 0%, #004e89 100%);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--v-theme-primary)) 50%,
+      white 100%
+    );
     color: white;
   }
 
-  /* Secciones de herramientas */
   .tool-section,
   .config-section {
     transition: all 0.3s ease;
@@ -530,7 +539,6 @@
     transform: translateY(-5px);
   }
 
-  /* Container de notificaciones */
   .toast-container {
     position: fixed;
     top: 100px;
@@ -539,15 +547,6 @@
     max-width: 400px;
   }
 
-  /* Efectos de neón */
-  .neon-border {
-    border: 2px solid;
-    border-image: linear-gradient(45deg, #ff6b35, #004e89) 1;
-    box-shadow: 0 0 10px rgba(255, 107, 53, 0.5),
-      inset 0 0 10px rgba(0, 78, 137, 0.5);
-  }
-
-  /* Responsive mejoras */
   @media (max-width: 768px) {
     .glass-card {
       margin: 10px;
@@ -558,19 +557,16 @@
     }
   }
 
-  /* Dark theme específico */
   .v-theme--dark .glass-card {
     background: rgba(30, 30, 46, 0.8) !important;
     border: 1px solid rgba(255, 107, 53, 0.3);
   }
 
-  /* Light theme específico */
   .v-theme--light .glass-card {
     background: rgba(255, 255, 255, 0.8) !important;
     border: 1px solid rgba(0, 78, 137, 0.3);
   }
 
-  /* Scrollbar personalizado */
   ::-webkit-scrollbar {
     width: 8px;
   }
@@ -581,12 +577,20 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #ff6b35, #004e89);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--v-theme-primary)) 50%,
+      white 100%
+    );
     border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #004e89, #ff6b35);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--v-theme-primary)) 50%,
+      white 100%
+    );
   }
 </style>
 

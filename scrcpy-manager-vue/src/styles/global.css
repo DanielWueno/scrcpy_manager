@@ -1,11 +1,11 @@
-/* Estilos globales súper chidos para Scrcpy Manager */
-
-/* Importar fuentes chidas */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
-/* Variables CSS globales */
 :root {
-  --primary-gradient: linear-gradient(135deg, #ff6b35 0%, #004e89 100%);
+  --primary-gradient: linear-gradient(
+    135deg,
+    rgb(var(--v-theme-primary)) 0%,
+    rgb(var(--v-theme-primary)) 100%
+  );
   --accent-gradient: linear-gradient(135deg, #1a535c 0%, #ff9800 100%);
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
@@ -13,7 +13,6 @@
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset y base */
 * {
   box-sizing: border-box;
 }
@@ -24,7 +23,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Efectos de glassmorphism globales */
 .glass-effect {
   backdrop-filter: blur(20px);
   background: var(--glass-bg);
@@ -32,7 +30,6 @@ body {
   transition: var(--transition-smooth);
 }
 
-/* Botones con efectos de hover chidos */
 .btn-hover-effect {
   position: relative;
   overflow: hidden;
@@ -63,7 +60,6 @@ body {
   box-shadow: var(--shadow-glow);
 }
 
-/* Animaciones de entrada */
 .fade-in {
   animation: fadeIn 0.6s ease-out;
 }
@@ -107,7 +103,6 @@ body {
   }
 }
 
-/* Efectos de partículas de fondo */
 .particles-bg {
   position: fixed;
   top: 0;
@@ -135,7 +130,6 @@ body {
   }
 }
 
-/* Scrollbar personalizado mejorado */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -163,7 +157,6 @@ body {
   background: transparent;
 }
 
-/* Efectos de texto con gradiente */
 .gradient-text {
   background: var(--primary-gradient);
   -webkit-background-clip: text;
@@ -180,7 +173,6 @@ body {
   font-weight: 600;
 }
 
-/* Cards con efectos 3D */
 .card-3d {
   transform-style: preserve-3d;
   transition: var(--transition-smooth);
@@ -190,7 +182,6 @@ body {
   transform: rotateY(5deg) rotateX(5deg);
 }
 
-/* Loading spinner personalizado */
 .custom-spinner {
   width: 40px;
   height: 40px;
@@ -206,7 +197,6 @@ body {
   }
 }
 
-/* Efectos de neón */
 .neon-glow {
   text-shadow: 0 0 5px currentColor, 0 0 10px currentColor,
     0 0 15px currentColor, 0 0 20px currentColor;
@@ -217,7 +207,6 @@ body {
     0 0 30px rgba(255, 107, 53, 0.1);
 }
 
-/* Responsive utilities */
 .mobile-only {
   display: none;
 }
@@ -240,21 +229,18 @@ body {
   }
 }
 
-/* Dark mode específico */
 .v-theme--dark {
   --glass-bg: rgba(30, 30, 46, 0.8);
   --glass-border: rgba(255, 107, 53, 0.3);
   --shadow-glow: 0 8px 32px rgba(255, 107, 53, 0.4);
 }
 
-/* Light mode específico */
 .v-theme--light {
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 78, 137, 0.3);
   --shadow-glow: 0 8px 32px rgba(0, 78, 137, 0.3);
 }
 
-/* Mejoras para accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -263,13 +249,11 @@ body {
   }
 }
 
-/* Focus states mejorados */
 .v-btn:focus-visible {
   outline: 2px solid #ff6b35;
   outline-offset: 2px;
 }
 
-/* Tooltips con estilo */
 .custom-tooltip {
   background: var(--primary-gradient) !important;
   color: white !important;

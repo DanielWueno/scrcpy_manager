@@ -20,21 +20,39 @@
         <v-list-item
           v-for="device in devices"
           :key="device.serial"
-          @click="$emit('device-selected', device)"
           :active="selectedDevice?.serial === device.serial"
           :class="{
-            'bg-surface-variant': selectedDevice?.serial === device.serial,
+            'bg-surface': selectedDevice?.serial === device.serial,
           }"
+          @click="$emit('device-selected', device)"
         >
           <template #prepend>
-            <v-avatar :color="device.connected ? 'success' : 'error'">
-              <v-icon>{{
-                device.connected ? "mdi-cellphone-check" : "mdi-cellphone-off"
-              }}</v-icon>
+            <v-avatar
+              :color="
+                device.active
+                  ? 'success'
+                  : device.connected
+                  ? 'teal-darken-1'
+                  : 'red-darken-2'
+              "
+            >
+              <v-icon color="white">
+                {{
+                  device.active
+                    ? "mdi-cellphone-play"
+                    : device.connected
+                    ? "mdi-cellphone-check"
+                    : "mdi-cellphone-off"
+                }}
+              </v-icon>
             </v-avatar>
           </template>
 
-          <v-list-item-title>{{ device.alias }}</v-list-item-title>
+          <v-list-item-title>{{
+            device.alias ||
+            device.name ||
+            `Dispositivo ${device.serial.slice(-4)}`
+          }}</v-list-item-title>
           <v-list-item-subtitle>{{ device.name }}</v-list-item-subtitle>
 
           <template #append>
@@ -44,8 +62,8 @@
                   device.active
                     ? 'success'
                     : device.connected
-                    ? 'warning'
-                    : 'error'
+                    ? 'teal-darken-1'
+                    : 'red-darken-2'
                 "
                 size="x-small"
                 variant="tonal"
@@ -75,16 +93,17 @@
         <v-icon
           size="64"
           color="grey-lighten-1"
-          >mdi-cellphone-off</v-icon
         >
+          mdi-cellphone-off
+        </v-icon>
         <p class="text-h6 mt-2">No hay dispositivos</p>
         <p class="text-body-2 text-medium-emphasis">
           Conecta un dispositivo Android via USB o WiFi
         </p>
         <v-btn
-          @click="$emit('refresh')"
           color="primary"
           class="mt-2"
+          @click="$emit('refresh')"
         >
           <v-icon left>mdi-refresh</v-icon>
           Buscar dispositivos

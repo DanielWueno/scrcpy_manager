@@ -21,7 +21,6 @@ export function useDeviceManager() {
     turnScreenOff: false,
   });
 
-  // Computed
   const isDeviceSelected = computed(() => selectedDevice.value !== null);
   const isDeviceActive = computed(() => selectedDevice.value?.active ?? false);
   const connectionButtonText = computed(() => {
@@ -29,7 +28,6 @@ export function useDeviceManager() {
     return selectedDevice.value.active ? "Desconectar" : "Conectar";
   });
 
-  // Methods
   const showToast = (
     message: string,
     type: ToastMessage["type"] = "info",
@@ -69,7 +67,6 @@ export function useDeviceManager() {
           );
         }
 
-        // Actualizar dispositivo seleccionado si existe
         if (selectedDevice.value) {
           const updated = devices.value.find(
             (d) => d.serial === selectedDevice.value!.serial
@@ -87,10 +84,9 @@ export function useDeviceManager() {
     } catch (error: any) {
       console.error("Error refreshing devices:", error);
 
-      // Mostrar mensaje específico si el backend no está disponible
       if (error.code === "ERR_NETWORK" || error.code === "ECONNREFUSED") {
         showToast(
-          "❌ Backend API no disponible - Verifica que el servidor esté corriendo en puerto 5000",
+          "Backend API no disponible - Verifica que el servidor esté corriendo en puerto 5000",
           "error",
           8000
         );
@@ -98,7 +94,6 @@ export function useDeviceManager() {
         showToast("Error de conexión al actualizar dispositivos", "error");
       }
 
-      // Limpiar dispositivos en caso de error de conexión
       devices.value = [];
     } finally {
       loading.value = false;
@@ -161,28 +156,26 @@ export function useDeviceManager() {
           { options }
         );
         if (response.success) {
-          showToast(`✅ Conectado a ${selectedDevice.value.alias}`, "success");
+          showToast(`Conectado a ${selectedDevice.value.alias}`, "success");
         } else {
           const errorMsg = response.error || "Error al conectar";
 
-          // Mensajes de error más específicos
           if (errorMsg.includes("Could not find ADB device")) {
             showToast(
-              `❌ Dispositivo ${selectedDevice.value.alias} no está conectado físicamente`,
+              `Dispositivo ${selectedDevice.value.alias} no está conectado físicamente`,
               "error"
             );
           } else if (errorMsg.includes("unauthorized")) {
             showToast(
-              `⚠️ Autoriza la depuración USB en ${selectedDevice.value.alias}`,
+              `Autoriza la depuración USB en ${selectedDevice.value.alias}`,
               "warning"
             );
           } else {
-            showToast(`❌ ${errorMsg}`, "error");
+            showToast(`${errorMsg}`, "error");
           }
         }
       }
 
-      // Actualizar inmediatamente después de la operación (event-driven)
       setTimeout(() => {
         if (selectedDevice.value) {
           updateDeviceStatus(selectedDevice.value.serial);
@@ -211,14 +204,12 @@ export function useDeviceManager() {
           payload?.filename ||
           `screenshot_${selectedDevice.value.alias}_${Date.now()}.png`;
 
-        // Descargar directamente al navegador
         try {
           const blob = await deviceApi.takeScreenshotDownload(
             selectedDevice.value.serial,
             filename
           );
 
-          // Crear URL temporal y descargar
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -228,8 +219,8 @@ export function useDeviceManager() {
           document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
 
-          showToast(`📸 Captura descargada: ${filename}`, "success", 5000);
-          return; // Salir temprano
+          showToast(`Captura descargada: ${filename}`, "success", 5000);
+          return;
         } catch (error) {
           showToast("Error al descargar captura", "error");
           return;
@@ -251,7 +242,6 @@ export function useDeviceManager() {
         );
       }
 
-      // Event-driven update: Solo actualizar después de acciones importantes
       if (["mirror_screen_off", "mirror_screen_on"].includes(action)) {
         setTimeout(() => {
           if (selectedDevice.value) {
@@ -268,31 +258,62 @@ export function useDeviceManager() {
   };
 
   const manualRefresh = async () => {
-    showToast("🔄 Actualizando dispositivos...", "info", 2000);
+    showToast("Actualizando dispositivos...", "info", 2000);
     await refreshDevices();
   };
 
+  const updateDeviceAlias = async (serial: string, alias: string) => {
+    try {
+      const response = await deviceApi.updateDeviceAlias(serial, alias);
+
+      if (response.success) {
+        const deviceIndex = devices.value.findIndex((d) => d.serial === serial);
+        if (deviceIndex !== -1) {
+          devices.value[deviceIndex].alias = alias;
+          if (!devices.value[deviceIndex].name) {
+            devices.value[deviceIndex].name = alias;
+          }
+        }
+
+        if (selectedDevice.value?.serial === serial) {
+          selectedDevice.value.alias = alias;
+          if (!selectedDevice.value.name) {
+            selectedDevice.value.name = alias;
+          }
+        }
+
+        showToast(
+          response.message || `Alias actualizado a "${alias}"`,
+          "success"
+        );
+
+        await refreshDevices();
+      } else {
+        showToast(response.error || "Error al actualizar alias", "error");
+      }
+    } catch (error) {
+      showToast("Error de conexión al actualizar alias", "error");
+      console.error("Alias update error:", error);
+    }
+  };
+
   return {
-    // State
     devices,
     selectedDevice,
     loading,
     actionLoading,
     toasts,
     connectionOptions,
-
-    // Computed
     isDeviceSelected,
     isDeviceActive,
     connectionButtonText,
-
-    // Methods
     showToast,
     removeToast,
     refreshDevices,
     manualRefresh,
     selectDevice,
     updateDeviceStatus,
+    updateDeviceAlias,
     toggleConnection,
     executeDeviceAction,
   };

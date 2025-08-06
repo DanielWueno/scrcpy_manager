@@ -1,49 +1,47 @@
-<!-- filepath: c:\Users\DSOFT03.CORP\Documents\Soft\scrcpy_manager\scrcpy-manager-vue\scrcpy-manager-vue\src\components\QuickConfig.vue -->
 <template>
   <div>
     <v-card-subtitle class="d-flex align-center px-0">
-      <v-icon left>mdi-cog</v-icon>
       Configuración Rápida
     </v-card-subtitle>
 
-    <div class="configuration-options">
+    <div class="configuration-options px-1 d-flex flex-column gap-1">
       <v-switch
         v-model="localOptions.stayAwake"
-        @update:model-value="updateOptions"
         label="Mantener pantalla encendida"
         color="success"
         density="compact"
         hide-details
-        class="mb-2"
+        class="mb-1"
+        @update:model-value="updateOptions"
       />
 
       <v-switch
         v-model="localOptions.showTouches"
-        @update:model-value="updateOptions"
         label="Mostrar toques"
-        color="info"
+        color="success"
         density="compact"
         hide-details
-        class="mb-2"
+        class="mb-1"
+        @update:model-value="updateOptions"
       />
 
       <v-switch
         v-model="localOptions.noAudio"
-        @update:model-value="updateOptions"
         label="Sin audio"
-        color="warning"
+        color="success"
         density="compact"
         hide-details
-        class="mb-2"
+        class="mb-1"
+        @update:model-value="updateOptions"
       />
 
       <v-switch
         v-model="localOptions.turnScreenOff"
-        @update:model-value="updateOptions"
         label="Apagar pantalla al conectar"
-        color="error"
+        color="success"
         density="compact"
         hide-details
+        @update:model-value="updateOptions"
       />
     </div>
   </div>
@@ -77,11 +75,3 @@
     { deep: true }
   );
 </script>
-
-<style scoped>
-  .configuration-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-</style>
