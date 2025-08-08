@@ -1,0 +1,32 @@
+[
+  {
+    "serial": "29151FDH30087C",
+    "platform": "android",
+    "name": "google Pixel 7 Pro",
+    "first_seen": "2025-08-06T17:18:10.919043"
+  },
+  {
+    "serial": "00008030-001471E13407802E",
+    "platform": "ios",
+    "name": "iPhone de Desarrollo",
+    "first_seen": "2025-08-07T15:50:30.288243"
+  },
+  {
+    "serial": "00008110-0019759C0C02401E",
+    "platform": "ios",
+    "name": "iPhone 401E",
+    "first_seen": "2025-08-07T15:56:55.079994"
+  },
+  {
+    "serial": "HA1DLN2R",
+    "platform": "android",
+    "name": "Lenovo TB-8505FS",
+    "first_seen": "2025-08-08T12:24:26.490966"
+  },
+  {
+    "serial": "00008140-000204D62EFA801C",
+    "platform": "ios",
+    "name": "iPhone 801C",
+    "first_seen": "2025-08-08T12:57:27.756273"
+  }
+]

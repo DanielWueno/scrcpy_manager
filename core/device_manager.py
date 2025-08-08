@@ -9,121 +9,157 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Optional
+from .android.android_manager import AndroidManager
+from .ios.ios_manager import IOSManager
 
 class DeviceManager:
     def __init__(self):
-        self.devices = []
-        self.config_file = "scrcpy_devices.json"
-        self.adb_path = "adb.exe"
-        self.load_saved_devices()
+        self.android_manager = AndroidManager()
+        self.ios_manager = IOSManager()
+        self.devices_file = "devices.json"
+        self.devices = self.load_devices()
     
-    def load_saved_devices(self):
-        """Carga dispositivos guardados desde archivo"""
-        try:
-            if os.path.exists(self.config_file):
-                with open(self.config_file, 'r') as f:
-                    saved_data = json.load(f)
-                    self.devices = saved_data.get('devices', [])
-        except:
-            self.devices = []
+    def load_devices(self) -> List[Dict]:
+        """Carga dispositivos del archivo JSON"""
+        if os.path.exists(self.devices_file):
+            try:
+                with open(self.devices_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except:
+                pass
+        return []
     
     def save_devices(self):
-        """Guarda dispositivos en archivo"""
+        """Guarda dispositivos al archivo JSON"""
         try:
-            data = {
-                'devices': self.devices,
-                'last_updated': datetime.now().isoformat()
-            }
-            with open(self.config_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            with open(self.devices_file, 'w', encoding='utf-8') as f:
+                json.dump(self.devices, f, indent=2, ensure_ascii=False)
         except Exception as e:
             print(f"Error guardando dispositivos: {e}")
     
-    def get_connected_devices(self) -> List[str]:
-        """Obtiene lista de dispositivos conectados via ADB"""
-        try:
-            result = subprocess.run([self.adb_path, 'devices'], 
-                                  capture_output=True, text=True, timeout=10)
-            
-            if result.returncode != 0:
-                return []
-            
-            lines = result.stdout.strip().split('\n')[1:]
-            devices = []
-            
-            for line in lines:
-                if line.strip() and '\tdevice' in line:
-                    serial = line.split('\t')[0]
-                    devices.append(serial)
-            
-            return devices
-            
-        except:
-            return []
-    
-    def get_device_info(self, serial: str) -> str:
-        """Obtiene información del dispositivo"""
-        try:
-            # Obtener modelo
-            result = subprocess.run([self.adb_path, '-s', serial, 'shell', 'getprop', 'ro.product.model'], 
-                                  capture_output=True, text=True, timeout=5)
-            model = result.stdout.strip() if result.returncode == 0 else "Desconocido"
-            
-            # Obtener marca
-            result = subprocess.run([self.adb_path, '-s', serial, 'shell', 'getprop', 'ro.product.brand'], 
-                                  capture_output=True, text=True, timeout=5)
-            brand = result.stdout.strip() if result.returncode == 0 else "Desconocido"
-            
-            return f"{brand} {model}"
-        except:
-            return "Información no disponible"
-    
-    def update_devices_list(self) -> int:
-        """Actualiza la lista de dispositivos y retorna cantidad de nuevos"""
-        connected = self.get_connected_devices()
-        new_devices_count = 0
+    def get_all_devices(self) -> List[Dict]:
+        """Obtiene todos los dispositivos de todas las plataformas"""
+        all_devices = []
         
-        for serial in connected:
-            existing = next((d for d in self.devices if d['serial'] == serial), None)
-            if not existing:
-                info = self.get_device_info(serial)
+        # Dispositivos Android
+        try:
+            android_devices = self.android_manager.get_connected_devices()
+            for serial in android_devices:
+                info = self.android_manager.get_device_info(serial)
                 device = {
                     'serial': serial,
-                    'name': info,
-                    'alias': f"Device_{serial[-4:]}",
-                    'last_seen': datetime.now().isoformat()
+                    'connected': True,
+                    'active': self.android_manager.is_mirror_active(serial),
+                    'last_seen': datetime.now().isoformat(),
+                    **info
                 }
-                self.devices.append(device)
-                new_devices_count += 1
-            else:
-                existing['last_seen'] = datetime.now().isoformat()
+                
+                # Buscar alias guardado
+                saved_device = next((d for d in self.devices if d.get('serial') == serial), None)
+                if saved_device:
+                    device['alias'] = saved_device.get('alias')
+                
+                all_devices.append(device)
+        except Exception as e:
+            print(f"Error obteniendo dispositivos Android: {e}")
         
-        if new_devices_count > 0:
-            self.save_devices()
+        # Dispositivos iOS
+        try:
+            ios_devices = self.ios_manager.get_connected_devices()
+            for udid in ios_devices:
+                info = self.ios_manager.get_device_info(udid)
+                device = {
+                    'serial': udid,
+                    'connected': True,
+                    'active': self.ios_manager.is_mirror_active(udid),
+                    'last_seen': datetime.now().isoformat(),
+                    **info
+                }
+                
+                # Buscar alias guardado
+                saved_device = next((d for d in self.devices if d.get('serial') == udid), None)
+                if saved_device:
+                    device['alias'] = saved_device.get('alias')
+                
+                all_devices.append(device)
+        except Exception as e:
+            print(f"Error obteniendo dispositivos iOS: {e}")
         
-        return new_devices_count
-    
-    def get_device_by_serial(self, serial: str) -> Optional[Dict]:
-        """Obtiene dispositivo por serial"""
-        return next((d for d in self.devices if d['serial'] == serial), None)
-    
-    def update_device_alias(self, serial: str, new_alias: str) -> bool:
-        """Actualiza alias de dispositivo"""
-        device = self.get_device_by_serial(serial)
-        if device:
-            device['alias'] = new_alias
-            self.save_devices()
-            return True
-        return False
+        return all_devices
     
     def get_devices_status(self) -> List[Dict]:
-        """Retorna dispositivos con su estado de conexión"""
-        connected = self.get_connected_devices()
-        devices_status = []
+        """Método de compatibilidad con la API existente"""
+        return self.get_all_devices()
+    
+    def get_connected_devices(self) -> List[str]:
+        """Obtiene seriales de dispositivos conectados"""
+        devices = []
+        devices.extend(self.android_manager.get_connected_devices())
+        devices.extend(self.ios_manager.get_connected_devices())
+        return devices
+    
+    def get_device_by_serial(self, serial: str) -> Optional[Dict]:
+        """Obtiene dispositivo por serial/udid"""
+        all_devices = self.get_all_devices()
+        return next((d for d in all_devices if d['serial'] == serial), None)
+    
+    def update_devices_list(self) -> int:
+        """Actualiza lista de dispositivos y retorna cantidad de nuevos"""
+        current_devices = self.get_all_devices()
+        new_count = 0
         
-        for device in self.devices:
-            device_data = device.copy()
-            device_data['connected'] = device['serial'] in connected
-            devices_status.append(device_data)
+        for device in current_devices:
+            existing = next((d for d in self.devices if d.get('serial') == device['serial']), None)
+            if not existing:
+                self.devices.append({
+                    'serial': device['serial'],
+                    'platform': device['platform'],
+                    'name': device['name'],
+                    'first_seen': datetime.now().isoformat()
+                })
+                new_count += 1
         
-        return devices_status
+        self.save_devices()
+        return new_count
+    
+    def update_device_alias(self, serial: str, alias: str) -> bool:
+        """Actualiza alias de un dispositivo"""
+        try:
+            # Buscar en dispositivos guardados
+            device = next((d for d in self.devices if d.get('serial') == serial), None)
+            
+            if device:
+                device['alias'] = alias
+            else:
+                # Crear nuevo registro
+                device_info = self.get_device_by_serial(serial)
+                if device_info:
+                    self.devices.append({
+                        'serial': serial,
+                        'platform': device_info['platform'],
+                        'name': device_info['name'],
+                        'alias': alias,
+                        'first_seen': datetime.now().isoformat()
+                    })
+            
+            self.save_devices()
+            return True
+            
+        except Exception as e:
+            print(f"Error actualizando alias: {e}")
+            return False
+    
+    def execute_device_action(self, serial: str, action: str, payload=None) -> Dict:
+        """Ejecuta acción en el dispositivo apropiado"""
+        device = self.get_device_by_serial(serial)
+        if not device:
+            return {'success': False, 'error': 'Dispositivo no encontrado'}
+        
+        platform = device.get('platform')
+        
+        if platform == 'android':
+            return self.android_manager.execute_action(serial, action, payload)
+        elif platform == 'ios':
+            return self.ios_manager.execute_action(serial, action, payload)
+        else:
+            return {'success': False, 'error': 'Plataforma no soportada'}

@@ -1,10 +1,18 @@
 export interface Device {
-  serial: string;
-  alias: string;
+  id: string; // ✅ AGREGAR campo 'id'
+  serial: string; // ✅ Mantener 'serial' para compatibilidad
   name: string;
-  connected: boolean;
+  model: string;
+  platform: "android" | "ios";
   active: boolean;
-  last_seen?: string;
+
+  // Campos específicos de Android
+  android_version?: string;
+  brand?: string;
+
+  // Campos específicos de iOS
+  ios_version?: string;
+  build_version?: string;
 }
 
 export interface ApiResponse<T = any> {
@@ -43,3 +51,15 @@ export type DeviceAction =
   | "recent"
   | "screenshot"
   | "record";
+
+// ✅ Tipos para opciones de mirror
+export interface MirrorOptions {
+  stayAwake: boolean;
+  noAudio: boolean;
+  showTouches: boolean;
+  turnScreenOff: boolean;
+}
+
+export interface AndroidMirrorPayload extends MirrorOptions {
+  // Puede extender con más opciones en el futuro
+}
