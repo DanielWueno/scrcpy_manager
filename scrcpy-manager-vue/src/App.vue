@@ -369,7 +369,16 @@
           );
         });
 
-        devices.value = newDevices;
+        // Ensure 'connected' property exists for iOS devices
+        devices.value = newDevices.map((device: Device) => {
+          if (
+            device.platform === "ios" &&
+            typeof (device as any).connected === "undefined"
+          ) {
+            return { ...device, connected: false };
+          }
+          return device;
+        });
 
         // Si hay un dispositivo seleccionado, actualizar su estado
         if (selectedDevice.value) {

@@ -18,8 +18,8 @@ importers:
         specifier: ^3.5.17
         version: 3.5.18(typescript@5.8.3)
       vuetify:
-        specifier: 3.9.0-beta.1
-        version: 3.9.0-beta.1(typescript@5.8.3)(vue@3.5.18(typescript@5.8.3))
+        specifier: 3.9.5
+        version: 3.9.5(typescript@5.8.3)(vue@3.5.18(typescript@5.8.3))
     devDependencies:
       '@types/node':
         specifier: ^24.2.0
@@ -641,8 +641,8 @@ packages:
       typescript:
         optional: true
 
-  vuetify@3.9.0-beta.1:
-    resolution: {integrity: sha512-fdt4hCNvClloNf1d5BpULrz5mrhLaFSPPmRuPUuQiMWbUU15i6Wa45i7GaDsGyO0Ij91SHb1jAdEGVLE/kG/6g==}
+  vuetify@3.9.5:
+    resolution: {integrity: sha512-rJBSo1FeKcJJaqTfVHbOdpFXCmgeEIGzrh6HBEMGjSflan6voPIMSiK2dTCUU4t9JeghwvJtoAE5eBuqYIkFVA==}
     engines: {node: ^12.20 || >=14.13}
     peerDependencies:
       typescript: '>=4.7'
@@ -1156,7 +1156,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  vuetify@3.9.0-beta.1(typescript@5.8.3)(vue@3.5.18(typescript@5.8.3)):
+  vuetify@3.9.5(typescript@5.8.3)(vue@3.5.18(typescript@5.8.3)):
     dependencies:
       vue: 3.5.18(typescript@5.8.3)
     optionalDependencies:

@@ -5,6 +5,9 @@ export interface Device {
   model: string;
   platform: "android" | "ios";
   active: boolean;
+  alias: string;
+  connected: boolean;
+  last_seen: string;
 
   // Campos específicos de Android
   android_version?: string;

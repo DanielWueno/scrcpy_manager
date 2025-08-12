@@ -1,11 +1,10 @@
-
-
 export interface IOSDevice {
   id: string;
   serial: string;
   name: string;
+  alias: string;
   model: string;
-  platform: 'android' | 'ios';
+  platform: "android" | "ios";
   active: boolean;
   connected?: boolean;
   android_version?: string;
@@ -14,7 +13,7 @@ export interface IOSDevice {
   build_version?: string;
 }
 
-export type IOSAction = 
+export type IOSAction =
   | "ios_mirror"
   | "ios_stop_mirror"
   | "ios_screenshot"
@@ -26,7 +25,7 @@ export type IOSAction =
   | "ios_device_info";
 
 export interface IOSStreamOptions {
-  quality: 'low' | 'medium' | 'high';
+  quality: "low" | "medium" | "high";
   fps: 15 | 30 | 60;
   enableAudio: boolean;
   enableControl: boolean;
@@ -39,7 +38,7 @@ export interface IOSMirrorSession {
   port: number;
   startedAt: string;
   options: IOSStreamOptions;
-  status: 'starting' | 'active' | 'stopping' | 'error';
+  status: "starting" | "active" | "stopping" | "error";
 }
 
 export interface IOSDeviceInfo {

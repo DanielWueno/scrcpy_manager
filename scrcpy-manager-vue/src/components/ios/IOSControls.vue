@@ -28,7 +28,10 @@
 
       <!-- ✅ AGREGAR: Mostrar URL del stream cuando esté activo -->
       <v-expand-transition>
-        <div v-if="device.active && mirrorSession" class="mb-4">
+        <div
+          v-if="device.active && mirrorSession"
+          class="mb-4"
+        >
           <v-alert
             type="success"
             variant="outlined"
@@ -36,7 +39,9 @@
           >
             <v-alert-title>Mirror iOS Activo</v-alert-title>
             <div class="d-flex align-center justify-space-between">
-              <span>Stream: <code>{{ getStreamUrl() }}</code></span>
+              <span
+                >Stream: <code>{{ getStreamUrl() }}</code></span
+              >
               <v-btn
                 :href="getStreamUrl()"
                 target="_blank"
@@ -54,7 +59,10 @@
 
       <!-- Opciones de mirror (cuando no está activo) -->
       <v-expand-transition>
-        <div v-if="!device.active" class="mb-4">
+        <div
+          v-if="!device.active"
+          class="mb-4"
+        >
           <v-divider class="mb-3" />
           <div class="text-subtitle2 mb-2">Opciones de Mirror:</div>
 
@@ -174,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from "vue";
+  import { ref } from "vue";
   import type { IOSDevice, IOSAction, IOSMirrorSession } from "../../types/ios";
 
   interface Props {
@@ -193,19 +201,19 @@
   // Opciones de mirror actualizadas
   const mirrorOptions = ref({
     port: 8000,
-    interface: 'none',
+    interface: "none",
     stream: true,
-    verbose: false
+    verbose: false,
   });
 
   const interfaceOptions = [
-    { title: 'Ninguna (Solo local)', value: 'none' },
-    { title: 'Todas (0.0.0.0)', value: '0.0.0.0' },
-    { title: 'localhost', value: '127.0.0.1' }
+    { title: "Ninguna (Solo local)", value: "none" },
+    { title: "Todas (0.0.0.0)", value: "0.0.0.0" },
+    { title: "localhost", value: "127.0.0.1" },
   ];
 
   const getStreamUrl = () => {
-    if (!props.mirrorSession) return '';
+    if (!props.mirrorSession) return "";
     const port = props.mirrorSession.port || 8000;
     return `http://localhost:${port}`;
   };
