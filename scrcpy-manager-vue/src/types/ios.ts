@@ -1,13 +1,17 @@
+
+
 export interface IOSDevice {
-  serial: string; // UDID
-  platform: 'ios';
+  id: string;
+  serial: string;
   name: string;
   model: string;
-  ios_version: string;
-  connected: boolean;
+  platform: 'android' | 'ios';
   active: boolean;
-  alias?: string;
-  last_seen?: string;
+  connected?: boolean;
+  android_version?: string;
+  brand?: string;
+  ios_version?: string;
+  build_version?: string;
 }
 
 export type IOSAction = 
