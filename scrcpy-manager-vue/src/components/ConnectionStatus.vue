@@ -24,7 +24,11 @@
             </h3>
             <div class="d-flex align-center">
               <v-chip
-                :color="device.platform === 'android' ? 'green' : 'blue'"
+                :color="
+                  device.platform && device.platform.toLowerCase() === 'android'
+                    ? 'green'
+                    : 'blue'
+                "
                 size="small"
                 variant="elevated"
                 class="mr-2"
@@ -34,10 +38,17 @@
                   size="16"
                 >
                   {{
-                    device.platform === "android" ? "mdi-android" : "mdi-apple"
+                    device.platform &&
+                    device.platform.toLowerCase() === "android"
+                      ? "mdi-android"
+                      : "mdi-apple"
                   }}
                 </v-icon>
-                {{ device.platform === "android" ? "Android" : "iOS" }}
+                {{
+                  device.platform && device.platform.toLowerCase() === "android"
+                    ? "Android"
+                    : "iOS"
+                }}
               </v-chip>
 
               <!-- ✅ Estado del mirror más claro -->
@@ -61,7 +72,11 @@
         <!-- ✅ Solo información del dispositivo, sin botón -->
         <div class="text-right">
           <v-chip
-            :color="device.platform === 'android' ? 'green' : 'blue'"
+            :color="
+              device.platform && device.platform.toLowerCase() === 'android'
+                ? 'green'
+                : 'blue'
+            "
             variant="outlined"
             size="small"
           >
@@ -69,7 +84,7 @@
           </v-chip>
           <div class="text-caption text-medium-emphasis mt-1">
             {{
-              device.platform === "android"
+              device.platform && device.platform.toLowerCase() === "android"
                 ? device.android_version
                 : device.ios_version
             }}
