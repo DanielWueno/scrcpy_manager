@@ -12,10 +12,10 @@
               :devices="allDevices"
               :selectedDevice="selectedDevice"
               :loading="refreshing"
-              :monitoring="false"
+              :monitoring="monitoring"
               @device-selected="handleDeviceSelected"
               @refresh="refreshAllDevices"
-              @toggle-monitoring="() => {}"
+              @toggle-monitoring="toggleMonitoring"
             />
           </v-col>
 
@@ -47,7 +47,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, onUnmounted } from "vue";
+  import * as signalR from "@microsoft/signalr";
   import type { Device } from "./types";
   import DeviceList from "./components/DeviceList.vue";
   import DeviceControls from "./components/DeviceControls.vue";
@@ -59,7 +60,47 @@
   const selectedDeviceStatus = ref<any>(null);
   const actionLoading = ref(false);
   const refreshing = ref(false);
+  const monitoring = ref(false);
   const snackbar = ref({ show: false, message: "", color: "info" });
+
+  // SignalR
+  const hubConnection = new signalR.HubConnectionBuilder()
+    .withUrl("https://localhost:59399/hubs/android")
+    .withAutomaticReconnect()
+    .configureLogging(signalR.LogLevel.Warning)
+    .build();
+
+  hubConnection.on("DeviceConnected", (device: any) => {
+    const serial = device.serial ?? device.Serial;
+    if (!devices.value.find((d) => d.serial === serial)) {
+      devices.value.push({
+        serial,
+        name: device.name ?? device.Name ?? serial,
+        brand: device.brand ?? device.Brand,
+        model: device.model ?? device.Model,
+        androidVersion: device.androidVersion ?? device.AndroidVersion,
+        platform: device.platform ?? device.Platform ?? "android",
+        active: false,
+      } as Device);
+      showNotification(
+        `Dispositivo conectado: ${device.name ?? serial}`,
+        "success",
+      );
+    }
+  });
+
+  hubConnection.on("DeviceDisconnected", (serial: string) => {
+    const idx = devices.value.findIndex((d) => d.serial === serial);
+    if (idx !== -1) {
+      const name = devices.value[idx].name ?? serial;
+      devices.value.splice(idx, 1);
+      if (selectedDevice.value?.serial === serial) {
+        selectedDevice.value = null;
+        selectedDeviceStatus.value = null;
+      }
+      showNotification(`Dispositivo desconectado: ${name}`, "warning");
+    }
+  });
 
   const allDevices = computed(() => devices.value);
 
@@ -110,25 +151,29 @@
         });
         if (res.success) {
           selectedDevice.value.active = true;
-          const dev = devices.value.find(d => d.serial === selectedDevice.value!.serial);
+          const dev = devices.value.find(
+            (d) => d.serial === selectedDevice.value!.serial,
+          );
           if (dev) dev.active = true;
         }
         showNotification(
           res.message || "Mirror iniciado",
-          res.success ? "success" : "error"
+          res.success ? "success" : "error",
         );
       } else if (action === "stop_mirror") {
         const res = await deviceApi.disconnectDevice(
-          selectedDevice.value.serial
+          selectedDevice.value.serial,
         );
         if (res.success) {
           selectedDevice.value.active = false;
-          const dev = devices.value.find(d => d.serial === selectedDevice.value!.serial);
+          const dev = devices.value.find(
+            (d) => d.serial === selectedDevice.value!.serial,
+          );
           if (dev) dev.active = false;
         }
         showNotification(
           res.message || "Mirror detenido",
-          res.success ? "success" : "error"
+          res.success ? "success" : "error",
         );
       } else {
         // Otras acciones genéricas
@@ -138,7 +183,7 @@
         });
         showNotification(
           res.message || "Acción ejecutada",
-          res.success ? "success" : "error"
+          res.success ? "success" : "error",
         );
       }
     } catch (error) {
@@ -148,12 +193,39 @@
     }
   }
 
+  async function toggleMonitoring(enabled: boolean) {
+    try {
+      if (enabled) {
+        await deviceApi.startMonitoring();
+        monitoring.value = true;
+        showNotification("Monitoreo activado", "success");
+      } else {
+        await deviceApi.stopMonitoring();
+        monitoring.value = false;
+        showNotification("Monitoreo desactivado", "info");
+      }
+    } catch {
+      showNotification("Error al cambiar estado de monitoreo", "error");
+    }
+  }
+
   function refreshAllDevices() {
     loadDevices();
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     loadDevices();
+    try {
+      await hubConnection.start();
+      const status = await deviceApi.getMonitoringStatus();
+      monitoring.value = status.isMonitoring;
+    } catch {
+      // SignalR no disponible, app sigue funcionando sin tiempo real
+    }
+  });
+
+  onUnmounted(async () => {
+    await hubConnection.stop();
   });
 </script>
 

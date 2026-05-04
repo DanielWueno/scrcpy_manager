@@ -126,6 +126,22 @@ export const deviceApi = {
     return response.data;
   },
 
+  // Monitoring
+  async getMonitoringStatus(): Promise<{ isMonitoring: boolean }> {
+    const response = await api.get<{ isMonitoring: boolean }>(
+      "/monitoring/status",
+    );
+    return response.data;
+  },
+
+  async startMonitoring(): Promise<void> {
+    await api.post("/monitoring/start");
+  },
+
+  async stopMonitoring(): Promise<void> {
+    await api.post("/monitoring/stop");
+  },
+
   // Obtener estado del dispositivo
   async getDeviceStatus(
     serial: string,
