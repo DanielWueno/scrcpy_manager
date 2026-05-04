@@ -98,17 +98,16 @@ export const deviceApi = {
   ): Promise<ApiResponse> {
     // Usar acceso seguro a las propiedades
     const actionType = (action as any).type || action.toString();
-    const actionCommand = (action as any).command || actionType;
 
-    // Para Android, mapear a endpoints específicos
+    // Acciones de mirror
     if (actionType === "start_mirror") {
       return await this.connectDevice(serial, { options: [] });
     }
-
     if (actionType === "stop_mirror") {
       return await this.disconnectDevice(serial);
     }
 
+    // Screenshot tiene endpoint dedicado
     if (actionType === "screenshot") {
       const response = await api.post<ApiResponse>(
         `/android/devices/${serial}/screenshot`,
@@ -116,12 +115,26 @@ export const deviceApi = {
       return response.data;
     }
 
-    // Para otros comandos, usar el endpoint ADB
+    // Acciones de teclado/pantalla → endpoint /action (mapeo en el backend)
+    const deviceActions = new Set([
+      "home_button",
+      "back_button",
+      "volume_up",
+      "volume_down",
+      "wake_device",
+    ]);
+    if (deviceActions.has(actionType)) {
+      const response = await api.post<ApiResponse>(
+        `/android/devices/${serial}/action`,
+        { action: actionType, payload: {} },
+      );
+      return response.data;
+    }
+
+    // Otros comandos ADB libres
     const response = await api.post<ApiResponse>(
       `/android/devices/${serial}/adb`,
-      {
-        command: actionCommand,
-      },
+      { command: actionType },
     );
     return response.data;
   },
