@@ -10,6 +10,19 @@
     {{ message }}
     <template #actions>
       <v-btn
+        v-if="actionLabel"
+        color="white"
+        variant="outlined"
+        size="small"
+        class="mr-1"
+        @click="
+          onAction?.();
+          close();
+        "
+      >
+        {{ actionLabel }}
+      </v-btn>
+      <v-btn
         color="white"
         variant="text"
         size="small"
@@ -28,6 +41,8 @@
     message: string;
     color?: string;
     timeout?: number;
+    actionLabel?: string;
+    onAction?: () => void;
   }>();
   const emit = defineEmits(["update:show"]);
   const close = () => emit("update:show", false);

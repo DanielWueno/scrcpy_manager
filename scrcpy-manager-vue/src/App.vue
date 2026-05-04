@@ -40,7 +40,9 @@
       :show="snackbar.show"
       :message="snackbar.message"
       :color="snackbar.color"
-      :timeout="3000"
+      :timeout="snackbar.actionLabel ? 8000 : 3000"
+      :actionLabel="snackbar.actionLabel"
+      :onAction="snackbar.onAction"
       @update:show="snackbar.show = $event"
     />
   </v-app>
@@ -61,7 +63,13 @@
   const actionLoading = ref(false);
   const refreshing = ref(false);
   const monitoring = ref(false);
-  const snackbar = ref({ show: false, message: "", color: "info" });
+  const snackbar = ref<{
+    show: boolean;
+    message: string;
+    color: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  }>({ show: false, message: "", color: "info" });
 
   // SignalR
   const hubConnection = new signalR.HubConnectionBuilder()
@@ -114,8 +122,19 @@
 
   const allDevices = computed(() => devices.value);
 
-  function showNotification(message: string, color?: string) {
-    snackbar.value = { show: true, message, color: color || "info" };
+  function showNotification(
+    message: string,
+    color?: string,
+    actionLabel?: string,
+    onAction?: () => void,
+  ) {
+    snackbar.value = {
+      show: true,
+      message,
+      color: color || "info",
+      actionLabel,
+      onAction,
+    };
   }
 
   async function loadDevices() {
@@ -203,6 +222,26 @@
           res.message || "Mirror detenido",
           res.success ? "success" : "error",
         );
+      } else if (action === "screenshot") {
+        const res = await deviceApi.deviceAction(selectedDevice.value.serial, {
+          type: action,
+          ...payload,
+        });
+        if (res.success && res.data) {
+          const folder = (res.data as any).folder ?? "";
+          const filename = (res.data as any).filename ?? "";
+          showNotification(
+            `Captura guardada: ${filename}`,
+            "success",
+            "Abrir carpeta",
+            () => deviceApi.openScreenshotsFolder().catch(() => {}),
+          );
+        } else {
+          showNotification(
+            res.message || "Error al capturar pantalla",
+            "error",
+          );
+        }
       } else {
         // Otras acciones genéricas
         const res = await deviceApi.deviceAction(selectedDevice.value.serial, {

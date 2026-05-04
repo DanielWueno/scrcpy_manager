@@ -126,7 +126,11 @@ export const deviceApi = {
     return response.data;
   },
 
-  // Monitoring
+  async openScreenshotsFolder(): Promise<void> {
+    await api.post("/files/open-folder");
+  },
+
+  // Monitoreo
   async getMonitoringStatus(): Promise<{ isMonitoring: boolean }> {
     const response = await api.get<{ isMonitoring: boolean }>(
       "/monitoring/status",
