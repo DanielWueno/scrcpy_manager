@@ -74,6 +74,7 @@
     const serial = device.serial ?? device.Serial;
     if (!devices.value.find((d) => d.serial === serial)) {
       devices.value.push({
+        id: serial,
         serial,
         name: device.name ?? device.Name ?? serial,
         brand: device.brand ?? device.Brand,
@@ -137,13 +138,12 @@
     actionLoading.value = true;
     try {
       if (action === "start_mirror") {
-        // Solo enviar las opciones relevantes como objeto
         // Siempre enviar las cuatro opciones, con true/false según los switches
         const optionsObj = {
-          StayAwake: Boolean(payload?.StayAwake),
-          NoAudio: Boolean(payload?.NoAudio),
-          ShowTouches: Boolean(payload?.ShowTouches),
-          TurnScreenOff: Boolean(payload?.TurnScreenOff),
+          stayAwake: Boolean(payload?.stayAwake),
+          noAudio: Boolean(payload?.noAudio),
+          showTouches: Boolean(payload?.showTouches),
+          turnScreenOff: Boolean(payload?.turnScreenOff),
         };
         console.log("Payload enviado a la API:", { options: optionsObj });
         const res = await deviceApi.connectDevice(selectedDevice.value.serial, {

@@ -32,13 +32,17 @@
       v-if="device.platform && device.platform.toLowerCase() === 'android'"
       :device="device"
       :actionLoading="actionLoading"
-      @execute-action="$emit('execute-action', $event)"
+      @execute-action="
+        (action, payload) => $emit('execute-action', action, payload)
+      "
     />
     <IOSControls
       v-else-if="device.platform && device.platform.toLowerCase() === 'ios'"
       :device="device"
       :actionLoading="actionLoading"
-      @execute-action="$emit('execute-action', $event)"
+      @execute-action="
+        (action, payload) => $emit('execute-action', action, payload)
+      "
     />
   </div>
 </template>

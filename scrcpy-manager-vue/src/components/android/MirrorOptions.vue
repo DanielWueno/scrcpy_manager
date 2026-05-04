@@ -169,9 +169,18 @@
     (e: "toggle-mirror"): void;
   }>();
   const options = ref({ ...props.options });
+
+  // Sincronizar cuando el padre cambia las opciones (e.g. al cambiar de dispositivo)
+  watch(
+    () => JSON.stringify(props.options),
+    () => {
+      options.value = { ...props.options };
+    },
+  );
+
   watch(options, (val) => emit("update:options", val), { deep: true });
   const hasActiveOptions = computed(() =>
-    Object.values(options.value).some(Boolean)
+    Object.values(options.value).some(Boolean),
   );
   const toggleMirror = () => emit("toggle-mirror");
 </script>

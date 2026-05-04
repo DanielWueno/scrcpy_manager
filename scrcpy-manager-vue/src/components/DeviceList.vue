@@ -31,7 +31,7 @@
           v-for="device in devices"
           :key="device.id"
           :device="device"
-          :isSelected="selectedDevice?.id === device.id"
+          :isSelected="selectedDevice?.serial === device.serial"
           @select="$emit('device-selected', device)"
         />
       </div>
