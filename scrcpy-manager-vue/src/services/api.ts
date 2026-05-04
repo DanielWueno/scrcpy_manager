@@ -6,7 +6,8 @@ import type {
   DeviceAction,
 } from "../types";
 
-const API_BASE_URL = "https://localhost:59399/api"; // ✅ Puerto correcto
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://localhost:59399/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

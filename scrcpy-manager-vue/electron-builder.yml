@@ -1,0 +1,42 @@
+appId: com.corp.mobile-remote-toolkit
+productName: Mobile Remote Toolkit
+copyright: Copyright © 2026
+
+# Output directory
+directories:
+  buildResources: resources
+  output: dist-electron
+
+# Files included in the app package
+files:
+  - out/**/*
+  - "!node_modules/**"
+  - "!src/**"
+  - "!electron/**"
+
+# Extra resources bundled alongside the app (not inside the asar)
+extraResources:
+  - from: ../Mobile.Remote.Toolkit.Api/publish
+    to: api
+    filter:
+      - "**/*"
+
+# Windows target
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icon.ico
+
+# NSIS installer config
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+
+# Compression
+compression: maximum

@@ -1,14 +1,20 @@
 {
   "name": "scrcpy-manager-vue",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "out/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build:web": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
-    "lint": "vue-tsc --noEmit"
+    "lint": "vue-tsc --noEmit",
+    "electron:dev": "electron-vite dev",
+    "electron:build": "vue-tsc -b && electron-vite build",
+    "electron:preview": "electron-vite preview",
+    "electron:pack": "pnpm electron:build && electron-builder --dir",
+    "electron:dist": "pnpm electron:build && electron-builder"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -18,12 +24,25 @@
     "vuetify": "3.9.5"
   },
   "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
     "@types/node": "^24.2.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
     "sass-embedded": "^1.99.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vue-tsc": "^2.2.12"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "app-builder-bin",
+      "electron",
+      "electron-winstaller",
+      "esbuild"
+    ]
   }
 }

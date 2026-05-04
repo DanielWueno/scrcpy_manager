@@ -72,8 +72,10 @@
   }>({ show: false, message: "", color: "info" });
 
   // SignalR
+  const SIGNALR_URL =
+    import.meta.env.VITE_SIGNALR_URL || "https://localhost:59399/hubs/android";
   const hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:59399/hubs/android")
+    .withUrl(SIGNALR_URL)
     .withAutomaticReconnect()
     .configureLogging(signalR.LogLevel.Warning)
     .build();
