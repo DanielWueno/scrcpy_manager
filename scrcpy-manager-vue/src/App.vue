@@ -103,6 +103,15 @@
     }
   });
 
+  hubConnection.on("MirrorStopped", (serial: string) => {
+    const dev = devices.value.find((d) => d.serial === serial);
+    if (dev) dev.active = false;
+    if (selectedDevice.value?.serial === serial) {
+      selectedDevice.value.active = false;
+    }
+    showNotification(`Mirror cerrado: ${serial}`, "info");
+  });
+
   const allDevices = computed(() => devices.value);
 
   function showNotification(message: string, color?: string) {
@@ -123,8 +132,27 @@
   }
 
   async function handleDeviceSelected(device: Device) {
+    // Salir del grupo del dispositivo anterior
+    if (
+      selectedDevice.value &&
+      selectedDevice.value.serial !== device.serial &&
+      hubConnection.state === signalR.HubConnectionState.Connected
+    ) {
+      await hubConnection
+        .invoke("LeaveDeviceGroup", selectedDevice.value.serial)
+        .catch(() => {});
+    }
+
     selectedDevice.value = device;
     selectedDeviceStatus.value = null;
+
+    // Unirse al grupo del nuevo dispositivo para recibir MirrorStopped, MirrorStarted, etc.
+    if (hubConnection.state === signalR.HubConnectionState.Connected) {
+      await hubConnection
+        .invoke("JoinDeviceGroup", device.serial)
+        .catch(() => {});
+    }
+
     try {
       const status = await deviceApi.getDeviceStatus(device.serial);
       selectedDeviceStatus.value = status;
@@ -217,6 +245,14 @@
     loadDevices();
     try {
       await hubConnection.start();
+      // Reincorporarse al grupo del dispositivo seleccionado tras reconexión
+      hubConnection.onreconnected(async () => {
+        if (selectedDevice.value) {
+          await hubConnection
+            .invoke("JoinDeviceGroup", selectedDevice.value.serial)
+            .catch(() => {});
+        }
+      });
       const status = await deviceApi.getMonitoringStatus();
       monitoring.value = status.isMonitoring;
     } catch {
