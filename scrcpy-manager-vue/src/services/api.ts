@@ -6,7 +6,7 @@ import type {
   DeviceAction,
 } from "../types";
 
-const API_BASE_URL = "https://localhost:5000/api"; // ✅ Puerto correcto
+const API_BASE_URL = "https://localhost:59399/api"; // ✅ Puerto correcto
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -25,7 +25,7 @@ api.interceptors.request.use(
   (error) => {
     console.error("API Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Interceptor para response
@@ -37,7 +37,7 @@ api.interceptors.response.use(
   (error) => {
     console.error("API Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 export const deviceApi = {
@@ -59,11 +59,11 @@ export const deviceApi = {
   // Iniciar mirror (mapear a tu endpoint)
   async connectDevice(
     serial: string,
-    options: { options: Record<string, any> }
+    options: { options: Record<string, any> },
   ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
       `/Android/devices/${serial}/mirror/start`,
-      { options: options.options }
+      { options: options.options },
     );
     return response.data;
   },
@@ -71,7 +71,7 @@ export const deviceApi = {
   // Detener mirror
   async disconnectDevice(serial: string): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
-      `/android/devices/${serial}/mirror/stop`
+      `/android/devices/${serial}/mirror/stop`,
     );
     return response.data;
   },
@@ -79,14 +79,14 @@ export const deviceApi = {
   // Tomar screenshot
   async takeScreenshotDownload(
     serial: string,
-    filename: string
+    filename: string,
   ): Promise<Blob> {
     const response = await api.post(
       `/android/devices/${serial}/screenshot`,
       { filename },
       {
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   },
@@ -94,7 +94,7 @@ export const deviceApi = {
   // Ejecutar acción genérica (puedes usar el endpoint de ADB)
   async deviceAction(
     serial: string,
-    action: DeviceAction
+    action: DeviceAction,
   ): Promise<ApiResponse> {
     // Usar acceso seguro a las propiedades
     const actionType = (action as any).type || action.toString();
@@ -111,7 +111,7 @@ export const deviceApi = {
 
     if (actionType === "screenshot") {
       const response = await api.post<ApiResponse>(
-        `/android/devices/${serial}/screenshot`
+        `/android/devices/${serial}/screenshot`,
       );
       return response.data;
     }
@@ -121,14 +121,14 @@ export const deviceApi = {
       `/android/devices/${serial}/adb`,
       {
         command: actionCommand,
-      }
+      },
     );
     return response.data;
   },
 
   // Obtener estado del dispositivo
   async getDeviceStatus(
-    serial: string
+    serial: string,
   ): Promise<
     ApiResponse & { device: Device; connected: boolean; active: boolean }
   > {
@@ -150,7 +150,7 @@ export const deviceApi = {
   // Actualizar alias (no implementado en API, retornar success por ahora)
   async updateDeviceAlias(
     _serial: string,
-    _alias: string
+    _alias: string,
   ): Promise<{
     success: boolean;
     message?: string;

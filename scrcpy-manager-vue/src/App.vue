@@ -108,6 +108,11 @@
         const res = await deviceApi.connectDevice(selectedDevice.value.serial, {
           options: optionsObj,
         });
+        if (res.success) {
+          selectedDevice.value.active = true;
+          const dev = devices.value.find(d => d.serial === selectedDevice.value!.serial);
+          if (dev) dev.active = true;
+        }
         showNotification(
           res.message || "Mirror iniciado",
           res.success ? "success" : "error"
@@ -116,6 +121,11 @@
         const res = await deviceApi.disconnectDevice(
           selectedDevice.value.serial
         );
+        if (res.success) {
+          selectedDevice.value.active = false;
+          const dev = devices.value.find(d => d.serial === selectedDevice.value!.serial);
+          if (dev) dev.active = false;
+        }
         showNotification(
           res.message || "Mirror detenido",
           res.success ? "success" : "error"
