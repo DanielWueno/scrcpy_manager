@@ -14,12 +14,21 @@
     "electron:build": "vue-tsc -b && electron-vite build",
     "electron:preview": "electron-vite preview",
     "electron:pack": "pnpm electron:build && electron-builder --dir",
-    "electron:dist": "pnpm electron:build && electron-builder"
+    "electron:dist": "pnpm electron:build && electron-builder",
+    "dev:full": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "backend:start": "powershell -ExecutionPolicy Bypass -File scripts/start-backend.ps1",
+    "backend:check": "powershell -ExecutionPolicy Bypass -File scripts/check-api.ps1",
+    "tools:check": "powershell -ExecutionPolicy Bypass -File scripts/check-backend.ps1",
+    "api:publish": "powershell -ExecutionPolicy Bypass -File scripts/publish-api.ps1",
+    "dist": "powershell -ExecutionPolicy Bypass -File scripts/build-dist.ps1",
+    "dist:skip-api": "powershell -ExecutionPolicy Bypass -File scripts/build-dist.ps1 -SkipApi",
+    "dist:quick": "powershell -ExecutionPolicy Bypass -File scripts/build-dist.ps1 -SkipApi -SkipBuild"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@microsoft/signalr": "^10.0.0",
     "axios": "^1.11.0",
+    "koffi": "^2.16.1",
     "vue": "^3.5.17",
     "vuetify": "3.9.5"
   },

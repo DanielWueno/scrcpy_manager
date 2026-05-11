@@ -96,5 +96,5 @@
   </v-card>
 </template>
 <script setup lang="ts">
-  const props = defineProps<{ actionLoading: boolean }>();
+  defineProps<{ actionLoading: boolean }>();
 </script>

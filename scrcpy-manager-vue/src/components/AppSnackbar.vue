@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
   import { defineProps, defineEmits } from "vue";
-  const props = defineProps<{
+  defineProps<{
     show: boolean;
     message: string;
     color?: string;

@@ -8,3 +8,11 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+interface DockApi {
+  attach(serial: string): Promise<{ success: boolean; error?: string }>;
+  detach(): Promise<{ success: boolean }>;
+}
+
+declare interface Window {
+  dockApi?: DockApi;
+}

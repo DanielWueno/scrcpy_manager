@@ -11,7 +11,7 @@
     <v-card-text>
       <MirrorOptions
         :options="mirrorOptions"
-        :deviceActive="device.active"
+        :deviceActive="Boolean(device.active)"
         :actionLoading="actionLoading"
         @update:options="mirrorOptions = $event"
         @toggle-mirror="toggleMirror"

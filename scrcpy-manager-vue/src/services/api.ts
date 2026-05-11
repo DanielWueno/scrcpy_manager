@@ -7,7 +7,7 @@ import type {
 } from "../types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://localhost:59399/api";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:59399/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -203,5 +203,25 @@ export const deviceApi = {
         error: "Error al actualizar alias",
       };
     }
+  },
+};
+
+export const extensionApi = {
+  async getMobileRemoteToolkitInfo(): Promise<{
+    available: boolean;
+    version: string;
+  }> {
+    try {
+      const response = await api.get<{ available: boolean; version: string }>(
+        "/extension/mobile-remote-toolkit",
+      );
+      return response.data;
+    } catch {
+      return { available: false, version: "0.0.0" };
+    }
+  },
+
+  getDownloadUrl(): string {
+    return `${API_BASE_URL}/extension/mobile-remote-toolkit/download`;
   },
 };

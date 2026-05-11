@@ -1,6 +1,7 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, shell, ipcMain } from "electron";
 import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
+import { attachToMirror, detachFromMirror } from "./windowManager";
 
 let apiProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
@@ -113,6 +114,19 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   await startApi();
   createWindow();
+
+  // ── IPC: dock window to scrcpy mirror ─────────────────────────────────────
+  ipcMain.handle("dock:attach", async (_event, serial: string) => {
+    if (!mainWindow) return { success: false, error: "No window" };
+    const ok = await attachToMirror(mainWindow, serial);
+    return { success: ok };
+  });
+
+  ipcMain.handle("dock:detach", () => {
+    detachFromMirror();
+    return { success: true };
+  });
+  // ──────────────────────────────────────────────────────────────────────────
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

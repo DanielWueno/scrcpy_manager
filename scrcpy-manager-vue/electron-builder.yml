@@ -5,7 +5,7 @@ copyright: Copyright © 2026
 # Output directory
 directories:
   buildResources: resources
-  output: dist-electron
+  output: dist-electron-test
 
 # Files included in the app package
 files:
@@ -16,18 +16,20 @@ files:
 
 # Extra resources bundled alongside the app (not inside the asar)
 extraResources:
-  - from: ../Mobile.Remote.Toolkit.Api/publish
+  - from: ../../Mobile.Remote.Toolkit.Api/publish
     to: api
     filter:
       - "**/*"
 
 # Windows target
 win:
+  signAndEditExecutable: false
+  signExts: []
+  verifyUpdateCodeSignature: false
   target:
     - target: nsis
       arch:
         - x64
-  icon: resources/icon.ico
 
 # NSIS installer config
 nsis:
@@ -35,8 +37,6 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  installerIcon: resources/icon.ico
-  uninstallerIcon: resources/icon.ico
 
 # Compression
 compression: maximum

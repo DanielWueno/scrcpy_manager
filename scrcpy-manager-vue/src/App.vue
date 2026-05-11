@@ -73,7 +73,7 @@
 
   // SignalR
   const SIGNALR_URL =
-    import.meta.env.VITE_SIGNALR_URL || "https://localhost:59399/hubs/android";
+    import.meta.env.VITE_SIGNALR_URL || "http://localhost:59399/hubs/android";
   const hubConnection = new signalR.HubConnectionBuilder()
     .withUrl(SIGNALR_URL)
     .withAutomaticReconnect()
@@ -119,6 +119,8 @@
     if (selectedDevice.value?.serial === serial) {
       selectedDevice.value.active = false;
     }
+    // Undock when scrcpy closes externally
+    window.dockApi?.detach();
     showNotification(`Mirror cerrado: ${serial}`, "info");
   });
 
@@ -204,6 +206,11 @@
             (d) => d.serial === selectedDevice.value!.serial,
           );
           if (dev) dev.active = true;
+          // Dock the Electron window next to the scrcpy mirror window
+          window.dockApi?.attach(selectedDevice.value.serial).then((r) => {
+            if (!r.success)
+              console.warn("[Dock] No se pudo hacer dock:", r.error);
+          });
         }
         showNotification(
           res.message || "Mirror iniciado",
@@ -219,6 +226,8 @@
             (d) => d.serial === selectedDevice.value!.serial,
           );
           if (dev) dev.active = false;
+          // Undock: allow the Electron window to move freely
+          window.dockApi?.detach();
         }
         showNotification(
           res.message || "Mirror detenido",
@@ -230,7 +239,6 @@
           ...payload,
         });
         if (res.success && res.data) {
-          const folder = (res.data as any).folder ?? "";
           const filename = (res.data as any).filename ?? "";
           showNotification(
             `Captura guardada: ${filename}`,
