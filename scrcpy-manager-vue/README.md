@@ -1,216 +1,147 @@
-# Vue 3 + TypeScript + Vite
+# Scrcpy Manager Desktop (Electron + Vue)
 
-# Scrcpy Manager Vue
+Aplicacion de escritorio para administrar dispositivos Android con scrcpy, construida con Electron, Vue 3 y TypeScript. El frontend consume el backend de Mobile.Remote.Toolkit.Api para listar dispositivos, iniciar/detener mirror y ejecutar acciones ADB.
 
-Una interfaz web moderna y elegante para gestionar dispositivos Android usando Scrcpy, construida con Vue 3, TypeScript y Vuetify.
+## Resumen
 
-## 🚀 Características
+- UI en Vue 3 + Vuetify
+- App de escritorio con Electron
+- Comunicacion con API REST y SignalR
+- Scripts de desarrollo para levantar frontend + backend
+- Pipeline de distribucion para instalador Windows
 
-- **Interfaz moderna**: Diseño Material Design con Vuetify 3
-- **TypeScript**: Desarrollo type-safe y mantenible
-- **Gestión de dispositivos**: Detección automática y conexión de dispositivos Android
-- **Controles remotos**: Screenshots, grabación, controles de pantalla
-- **Configuración rápida**: Opciones predefinidas para conexiones scrcpy
-- **Notificaciones en tiempo real**: Sistema de toast notifications
-- **Auto-refresh**: Actualización automática del estado de dispositivos
-- **Responsive**: Diseño adaptativo para diferentes tamaños de pantalla
+## Tecnologias
 
-## 🛠️ Stack Tecnológico
+- Electron 41
+- electron-vite 5
+- Vue 3.5
+- TypeScript 5.8
+- Vuetify 3.9
+- Axios
+- SignalR cliente (@microsoft/signalr)
 
-- **Vue 3.5** - Framework progresivo de JavaScript
-- **TypeScript 5.8** - JavaScript con tipado estático
-- **Vuetify 3.9** - Framework de componentes Material Design
-- **Vite 7** - Build tool rápido y moderno
-- **Axios** - Cliente HTTP para comunicación con API
-- **Material Design Icons** - Iconografía consistente
+## Requisitos
 
-## 📁 Estructura del Proyecto
+- Windows 10/11
+- Node.js 20+ recomendado
+- pnpm 9+ recomendado
+- .NET 8 SDK (para correr/publicar backend)
+- Herramientas Android en Tools del backend:
+  - Mobile.Remote.Toolkit.Api/Tools/Android/adb/adb.exe
+  - Mobile.Remote.Toolkit.Api/Tools/Android/scrcpy/scrcpy.exe
 
+## Instalacion
+
+```bash
+pnpm install
 ```
+
+## Comandos
+
+### Desarrollo
+
+```bash
+pnpm dev
+```
+
+Inicia solo el renderer de Vite en http://localhost:3000.
+
+```bash
+pnpm electron:dev
+```
+
+Inicia Electron en modo desarrollo (requiere backend ya levantado).
+
+```bash
+pnpm dev:full
+```
+
+Flujo completo en Windows:
+1. Verifica herramientas Android.
+2. Levanta el backend .NET en una ventana aparte.
+3. Espera hasta que el endpoint de API responda.
+4. Inicia Electron.
+
+### Backend Helpers
+
+```bash
+pnpm backend:start
+pnpm backend:check
+pnpm tools:check
+```
+
+- backend:start: ejecuta el API .NET en Development.
+- backend:check: verifica disponibilidad del API en https://localhost:59399/api/android/devices.
+- tools:check: valida existencia de adb y scrcpy en la carpeta Tools.
+
+### Build y Distribucion
+
+```bash
+pnpm electron:build
+pnpm electron:pack
+pnpm electron:dist
+```
+
+- electron:build: compila main, preload y renderer a out/.
+- electron:pack: genera carpeta unpacked.
+- electron:dist: genera instalador con electron-builder.
+
+Flujo empaquetado completo del producto (incluye backend publish):
+
+```bash
+pnpm dist
+pnpm dist:skip-api
+pnpm dist:quick
+```
+
+## Configuracion
+
+La URL base del backend se define en src/services/api.ts con este orden:
+
+1. Variable de entorno VITE_API_BASE_URL.
+2. Fallback a http://localhost:59399/api.
+
+Ejemplo .env local:
+
+```env
+VITE_API_BASE_URL=http://localhost:59400/api
+```
+
+## Estructura principal
+
+```text
+electron/
+  main/            # Proceso principal de Electron
+  preload/         # Bridge seguro IPC
 src/
-├── components/           # Componentes Vue reutilizables
-│   ├── DeviceList.vue   # Lista de dispositivos conectados
-│   ├── DeviceInfo.vue   # Información detallada del dispositivo
-│   ├── QuickConfig.vue  # Configuración rápida de opciones
-│   └── ToolbarFrame.vue # Herramientas y controles
-├── composables/         # Lógica de negocio reutilizable
-│   └── useDeviceManager.ts # Gestión de estado de dispositivos
-├── services/           # Servicios de comunicación
-│   └── api.ts         # Cliente API para backend
-├── types/             # Definiciones de tipos TypeScript
-│   └── index.ts      # Interfaces y tipos principales
-└── views/            # Vistas/páginas (futuras expansiones)
+  components/      # Componentes UI
+  composables/     # Logica reutilizable
+  services/        # Cliente API y SignalR
+  stores/          # Estado de aplicacion
+scripts/
+  dev.ps1          # Orquestacion desarrollo completo
+  build-dist.ps1   # Publish backend + build + instalador
 ```
 
-## 🚦 Comandos Disponibles
+## Endpoints usados por la app
 
-```bash
-# Instalar dependencias
-pnpm install
+- GET /api/android/devices
+- POST /api/android/devices/{serial}/mirror/start
+- POST /api/android/devices/{serial}/mirror/stop
+- POST /api/android/devices/{serial}/screenshot
+- POST /api/android/devices/{serial}/action
+- POST /api/android/devices/{serial}/adb
+- GET /api/android/devices/{serial}/status
+- GET /api/monitoring/status
+- POST /api/monitoring/start
+- POST /api/monitoring/stop
 
-# Desarrollo
-npm run dev          # Servidor de desarrollo en http://localhost:3000
+## Solucion de problemas
 
-# Construcción
-npm run build        # Build para producción
-npm run preview      # Vista previa del build
+- Si Electron abre pero no lista dispositivos, ejecutar pnpm backend:check.
+- Si falla mirror o acciones ADB, ejecutar pnpm tools:check.
+- Si hay error SSL en desarrollo, validar que el backend este en https://localhost:59399.
 
-# Verificación
-npm run type-check   # Verificación de tipos TypeScript
-npm run lint         # Análisis de código
-```
+## Proyecto relacionado
 
-## 🔧 Configuración
-
-### Prerequisitos
-
-- Node.js 18+
-- pnpm (recomendado) o npm
-- Backend API corriendo en `http://127.0.0.1:5000`
-
-### Variables de Entorno
-
-El proyecto usa la URL del API hardcodeada. Para cambiarla, modifica `src/services/api.ts`:
-
-```typescript
-const API_BASE_URL = "http://127.0.0.1:5000/api";
-```
-
-### Instalación y Ejecución
-
-1. **Clonar el repositorio**
-
-```bash
-git clone <repository-url>
-cd scrcpy-manager-vue
-```
-
-2. **Instalar dependencias**
-
-```bash
-pnpm install
-```
-
-3. **Ejecutar en desarrollo**
-
-```bash
-npm run dev
-```
-
-4. **Abrir en el navegador**
-   - Visita http://localhost:3000
-
-## 🏗️ API Backend
-
-El frontend se comunica con un backend que debe exponer los siguientes endpoints:
-
-```typescript
-GET    /api/devices              # Obtener lista de dispositivos
-POST   /api/devices/refresh      # Actualizar lista de dispositivos
-POST   /api/devices/:serial/connect    # Conectar dispositivo
-POST   /api/devices/:serial/disconnect # Desconectar dispositivo
-POST   /api/devices/:serial/screenshot # Tomar captura de pantalla
-POST   /api/devices/:serial/action     # Ejecutar acción en dispositivo
-GET    /api/devices/:serial/status     # Obtener estado del dispositivo
-```
-
-## 🎨 Personalización
-
-### Temas y Colores
-
-El proyecto usa Vuetify 3 con temas personalizables. Para modificar colores y temas, edita el archivo `src/main.ts`:
-
-```typescript
-const vuetify = createVuetify({
-  theme: {
-    defaultTheme: "light",
-    themes: {
-      light: {
-        colors: {
-          primary: "#1976D2",
-          secondary: "#424242",
-          // ... más colores
-        },
-      },
-    },
-  },
-});
-```
-
-### Configuración de Vite
-
-El proyecto incluye configuración optimizada en `vite.config.ts`:
-
-- Alias `@` para imports
-- Servidor en puerto 3000
-- Chunks de vendor optimizados
-- Source maps para debugging
-
-## 🧪 Testing
-
-Actualmente el proyecto no incluye tests, pero está preparado para:
-
-- **Unit Tests**: Vue Test Utils + Vitest
-- **E2E Tests**: Playwright o Cypress
-- **Type Checking**: TypeScript compiler
-
-## 📦 Build y Deployment
-
-```bash
-# Build para producción
-npm run build
-
-# Los archivos se generan en dist/
-# Sirve los archivos estáticos desde cualquier servidor web
-```
-
-El build genera:
-
-- Archivos HTML, CSS y JS optimizados
-- Source maps para debugging
-- Assets con hash para cache busting
-- Chunks separados para carga optimizada
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
-
-### Estándares de Código
-
-- **TypeScript**: Uso obligatorio para type safety
-- **ESLint**: Configuración estricta para calidad de código
-- **Prettier**: Formateo automático consistente
-- **Vue 3 Composition API**: Patrón preferido para componentes
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
-
-## 🔗 Enlaces Útiles
-
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Vuetify 3 Documentation](https://vuetifyjs.com/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [Scrcpy Repository](https://github.com/Genymobile/scrcpy)
-
-## 🐛 Problemas Conocidos
-
-- Requiere backend API funcionando para operaciones completas
-- Las notificaciones toast son temporales (no persistentes)
-- Auto-refresh puede impactar performance con muchos dispositivos
-
-## 🔄 Roadmap
-
-- [ ] Tests unitarios y E2E
-- [ ] Internacionalización (i18n)
-- [ ] Configuración persistente del usuario
-- [ ] Modo offline/fallback
-- [ ] Metricas y analytics
-- [ ] PWA capabilities
-
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+Este cliente depende del backend en la carpeta Mobile.Remote.Toolkit.Api del workspace.
