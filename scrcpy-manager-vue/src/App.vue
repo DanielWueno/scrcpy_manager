@@ -304,6 +304,11 @@
       });
       const status = await deviceApi.getMonitoringStatus();
       monitoring.value = status.isMonitoring;
+      if (!monitoring.value) {
+        await deviceApi.startMonitoring();
+        monitoring.value = true;
+        showNotification("Monitoreo activado al iniciar", "success");
+      }
     } catch {
       // SignalR no disponible, app sigue funcionando sin tiempo real
     }

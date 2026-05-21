@@ -3,7 +3,7 @@
     <div class="d-flex align-center mb-2">
       <v-switch
         :model-value="monitoring"
-        @change="$emit('toggle-monitoring', !monitoring)"
+        @update:model-value="$emit('toggle-monitoring', Boolean($event))"
         label="Autodetectar dispositivos (monitoring)"
         color="primary"
         hide-details
