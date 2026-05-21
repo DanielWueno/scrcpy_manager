@@ -10,9 +10,13 @@ directories:
 # Files included in the app package
 files:
   - out/**/*
-  - "!node_modules/**"
+  - node_modules/**/*
   - "!src/**"
   - "!electron/**"
+
+# Native modules must be unpacked from asar at runtime.
+asarUnpack:
+  - node_modules/koffi/**/*
 
 # Extra resources bundled alongside the app (not inside the asar)
 extraResources:
