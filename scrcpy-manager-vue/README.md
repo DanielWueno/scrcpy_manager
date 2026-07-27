@@ -25,7 +25,7 @@ Aplicacion de escritorio para administrar dispositivos Android con scrcpy, const
 - Windows 10/11
 - Node.js 20+ recomendado
 - pnpm 9+ recomendado
-- .NET 8 SDK (para correr/publicar backend)
+- .NET 10 SDK (para correr/publicar backend)
 - Herramientas Android en Tools del backend:
   - Mobile.Remote.Toolkit.Api/Tools/Android/adb/adb.exe
   - Mobile.Remote.Toolkit.Api/Tools/Android/scrcpy/scrcpy.exe
@@ -57,6 +57,7 @@ pnpm dev:full
 ```
 
 Flujo completo en Windows:
+
 1. Verifica herramientas Android.
 2. Levanta el backend .NET en una ventana aparte.
 3. Espera hasta que el endpoint de API responda.
