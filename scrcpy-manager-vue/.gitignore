@@ -12,7 +12,7 @@ dist
 dist-ssr
 out
 dist-electron
-dist-electron-test
+dist-electron-test*
 *.local
 Console.log
 *.tsbuildinfo
