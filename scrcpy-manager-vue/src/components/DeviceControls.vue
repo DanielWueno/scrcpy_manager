@@ -50,7 +50,7 @@
 <script setup lang="ts">
   import ConnectionStatus from "./ConnectionStatus.vue";
   import AndroidControls from "./android/AndroidControls.vue";
-  import IOSControls from "./IOSControls.vue";
+  import IOSControls from "./ios/IOSControls.vue";
   import { defineProps, computed } from "vue";
 
   const props = defineProps<{
