@@ -1,11 +1,6 @@
 import axios from "axios";
-import type {
-  IOSAction,
-  IOSDevice,
-  IOSMirrorSession,
-  IOSStreamOptions,
-} from "../types/ios";
 import type { ApiResponse } from "../types";
+import type { IOSDeviceResponse, IOSDeviceStatus } from "../types/ios";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:59399/api";
@@ -19,23 +14,21 @@ const api = axios.create({
 });
 
 export const iosApi = {
-  async getDevices(): Promise<IOSDevice[]> {
-    const response = await api.get<IOSDevice[]>("/ios/devices");
+  async getDevices(): Promise<IOSDeviceResponse[]> {
+    const response = await api.get<IOSDeviceResponse[]>("/ios/devices");
     return response.data;
   },
 
-  async getMirrorSessions(): Promise<IOSMirrorSession[]> {
-    const response = await api.get<IOSMirrorSession[]>("/ios/mirror/sessions");
+  async getDeviceStatus(udid: string): Promise<IOSDeviceStatus> {
+    const response = await api.get<IOSDeviceStatus>(
+      `/ios/devices/${udid}/status`,
+    );
     return response.data;
   },
 
-  async startMirror(
-    udid: string,
-    options: IOSStreamOptions,
-  ): Promise<ApiResponse> {
+  async startMirror(udid: string): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
       `/ios/devices/${udid}/mirror/start`,
-      { options },
     );
     return response.data;
   },
@@ -47,23 +40,12 @@ export const iosApi = {
     return response.data;
   },
 
-  async takeScreenshot(udid: string): Promise<Blob> {
-    const response = await api.post(
+  // El backend guarda la captura en disco y devuelve su ruta (mismo patrón que
+  // el screenshot de Android) — no una imagen binaria.
+  async takeScreenshot(udid: string, filename?: string): Promise<ApiResponse> {
+    const response = await api.get<ApiResponse>(
       `/ios/devices/${udid}/screenshot`,
-      {},
-      { responseType: "blob" },
-    );
-    return response.data;
-  },
-
-  async executeAction(
-    udid: string,
-    action: IOSAction,
-    payload?: unknown,
-  ): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>(
-      `/ios/devices/${udid}/action`,
-      { action, payload: payload ?? {} },
+      { params: filename ? { filename } : undefined },
     );
     return response.data;
   },

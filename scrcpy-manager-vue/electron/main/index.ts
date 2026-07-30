@@ -1,4 +1,11 @@
-import { app, BrowserWindow, shell, ipcMain } from "electron";
+import {
+  app,
+  BrowserWindow,
+  shell,
+  ipcMain,
+  clipboard,
+  nativeImage,
+} from "electron";
 import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
 import { attachToMirror, detachFromMirror } from "./windowManager";
@@ -115,16 +122,40 @@ app.whenReady().then(async () => {
   await startApi();
   createWindow();
 
-  // ── IPC: dock window to scrcpy mirror ─────────────────────────────────────
-  ipcMain.handle("dock:attach", async (_event, serial: string) => {
-    if (!mainWindow) return { success: false, error: "No window" };
-    const ok = await attachToMirror(mainWindow, serial);
-    return { success: ok };
-  });
+  // ── IPC: dock window to the device mirror window (scrcpy or IosScreenCaptureTool) ──
+  ipcMain.handle(
+    "dock:attach",
+    async (_event, serial: string, platform?: string) => {
+      if (!mainWindow) return { success: false, error: "No window" };
+      const ok = await attachToMirror(mainWindow, serial, platform);
+      return { success: ok };
+    },
+  );
 
   ipcMain.handle("dock:detach", () => {
     detachFromMirror();
     return { success: true };
+  });
+
+  ipcMain.handle("clipboard:copy-image-path", (_event, filePath: string) => {
+    try {
+      if (!filePath || typeof filePath !== "string") {
+        return { success: false, error: "Ruta de imagen inválida" };
+      }
+
+      const image = nativeImage.createFromPath(filePath);
+      if (image.isEmpty()) {
+        return { success: false, error: "No se pudo cargar la imagen" };
+      }
+
+      clipboard.writeImage(image);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Error desconocido",
+      };
+    }
   });
   // ──────────────────────────────────────────────────────────────────────────
 

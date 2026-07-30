@@ -29,6 +29,10 @@ Aplicacion de escritorio para administrar dispositivos Android con scrcpy, const
 - Herramientas Android en Tools del backend:
   - Mobile.Remote.Toolkit.Api/Tools/Android/adb/adb.exe
   - Mobile.Remote.Toolkit.Api/Tools/Android/scrcpy/scrcpy.exe
+- Herramientas iOS en Tools del backend:
+  - Mobile.Remote.Toolkit.Api/Tools/iOS/libimobiledevice/ (listado/info/screenshot)
+  - Mobile.Remote.Toolkit.Api/Tools/iOS/mirror/iosscreencapture/ (mirror por USB — requiere
+    correr `setup-scheduled-tasks.ps1` una vez, ver más abajo)
 
 ## Instalacion
 
@@ -133,9 +137,31 @@ scripts/
 - POST /api/android/devices/{serial}/action
 - POST /api/android/devices/{serial}/adb
 - GET /api/android/devices/{serial}/status
+- GET /api/ios/devices
+- GET /api/ios/devices/{udid}/status
+- POST /api/ios/devices/{udid}/mirror/start
+- POST /api/ios/devices/{udid}/mirror/stop
+- GET /api/ios/devices/{udid}/screenshot
 - GET /api/monitoring/status
 - POST /api/monitoring/start
 - POST /api/monitoring/stop
+
+### Mirror de iOS por USB
+
+El mirror de iOS corre por USB (no AirPlay/WiFi) via `IosScreenCaptureTool`, que el
+backend lanza a través de dos Scheduled Tasks de Windows con privilegios elevados
+(`MobileRemoteToolkit_IosMirror_Start`/`_Stop` — necesarias porque iOS 17+ requiere un
+túnel de red para hablar con los servicios de developer del dispositivo). Antes de usar
+el mirror de iOS por primera vez en una máquina, correr una vez, desde una PowerShell
+como Administrador:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "<ruta al backend>\Tools\iOS\mirror\iosscreencapture\setup-scheduled-tasks.ps1"
+```
+
+También hace falta activar **Modo Desarrollador** una vez en cada dispositivo iOS
+(Ajustes → Privacidad y Seguridad → Modo Desarrollador — la propia herramienta hace que
+la opción aparezca en el primer intento de conexión).
 
 ## Solucion de problemas
 

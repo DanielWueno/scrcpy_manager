@@ -6,6 +6,7 @@ export interface Device {
   brand?: string;
   model?: string;
   androidVersion?: string;
+  iosVersion?: string;
   platform?: "android" | "ios" | string;
   connected?: boolean;
   active?: boolean;

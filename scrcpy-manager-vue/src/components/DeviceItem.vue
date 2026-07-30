@@ -54,7 +54,7 @@
               {{
                 device.platform && device.platform.toLowerCase() === "android"
                   ? device.android_version
-                  : device.ios_version
+                  : device.iosVersion
               }}
             </span>
           </div>

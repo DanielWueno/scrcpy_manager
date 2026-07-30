@@ -52,10 +52,24 @@
   import { ref, computed, onMounted, onUnmounted } from "vue";
   import * as signalR from "@microsoft/signalr";
   import type { Device } from "./types";
+  import type { IOSDeviceResponse } from "./types/ios";
   import DeviceList from "./components/DeviceList.vue";
   import DeviceControls from "./components/DeviceControls.vue";
   import AppSnackbar from "./components/AppSnackbar.vue";
   import { deviceApi } from "./services/api";
+  import { iosApi } from "./services/iosApi";
+
+  function mapIOSDevice(d: IOSDeviceResponse): Device {
+    return {
+      id: d.udid,
+      serial: d.udid,
+      name: d.name,
+      model: d.model,
+      iosVersion: d.iosVersion,
+      platform: "ios",
+      active: d.active,
+    };
+  }
 
   const devices = ref<Device[]>([]);
   const selectedDevice = ref<Device | null>(null);
@@ -144,9 +158,15 @@
   async function loadDevices() {
     refreshing.value = true;
     try {
-      const result = await deviceApi.getDevices();
-      devices.value = result.devices || [];
-      showNotification(result.message ?? "Dispositivos obtenidos", "info");
+      const [androidResult, iosDevices] = await Promise.all([
+        deviceApi.getDevices(),
+        iosApi.getDevices().catch(() => [] as IOSDeviceResponse[]),
+      ]);
+      devices.value = [
+        ...(androidResult.devices || []),
+        ...iosDevices.map(mapIOSDevice),
+      ];
+      showNotification(androidResult.message ?? "Dispositivos obtenidos", "info");
     } catch (error) {
       showNotification("Error al cargar dispositivos", "error");
     } finally {
@@ -177,8 +197,10 @@
     }
 
     try {
-      const status = await deviceApi.getDeviceStatus(device.serial);
-      selectedDeviceStatus.value = status;
+      selectedDeviceStatus.value =
+        device.platform === "ios"
+          ? await iosApi.getDeviceStatus(device.serial)
+          : await deviceApi.getDeviceStatus(device.serial);
     } catch (error) {
       showNotification("Error al obtener estado del dispositivo", "error");
     }
@@ -186,6 +208,10 @@
 
   async function executeDeviceActionWithPayload(action: string, payload?: any) {
     if (!selectedDevice.value) return;
+    if (selectedDevice.value.platform === "ios") {
+      await executeIOSDeviceAction(action);
+      return;
+    }
     actionLoading.value = true;
     try {
       if (action === "start_mirror") {
@@ -207,10 +233,12 @@
           );
           if (dev) dev.active = true;
           // Dock the Electron window next to the scrcpy mirror window
-          window.dockApi?.attach(selectedDevice.value.serial).then((r) => {
-            if (!r.success)
-              console.warn("[Dock] No se pudo hacer dock:", r.error);
-          });
+          window.dockApi
+            ?.attach(selectedDevice.value.serial, "android")
+            .then((r) => {
+              if (!r.success)
+                console.warn("[Dock] No se pudo hacer dock:", r.error);
+            });
         }
         showNotification(
           res.message || "Mirror iniciado",
@@ -240,8 +268,19 @@
         });
         if (res.success && res.data) {
           const filename = (res.data as any).filename ?? "";
+          const fullPath = (res.data as any).full_path;
+          let clipboardMessage = "";
+
+          if (fullPath && window.clipboardApi) {
+            const clipboardResult =
+              await window.clipboardApi.copyImagePath(fullPath);
+            clipboardMessage = clipboardResult.success
+              ? " y copiada al portapapeles"
+              : " (no se pudo copiar al portapapeles)";
+          }
+
           showNotification(
-            `Captura guardada: ${filename}`,
+            `Captura guardada: ${filename}${clipboardMessage}`,
             "success",
             "Abrir carpeta",
             () => deviceApi.openScreenshotsFolder().catch(() => {}),
@@ -265,6 +304,82 @@
       }
     } catch (error) {
       showNotification("Error al ejecutar acción", "error");
+    } finally {
+      actionLoading.value = false;
+    }
+  }
+
+  async function executeIOSDeviceAction(action: string) {
+    if (!selectedDevice.value) return;
+    actionLoading.value = true;
+    try {
+      if (action === "start_mirror") {
+        const res = await iosApi.startMirror(selectedDevice.value.serial);
+        if (res.success) {
+          selectedDevice.value.active = true;
+          const dev = devices.value.find(
+            (d) => d.serial === selectedDevice.value!.serial,
+          );
+          if (dev) dev.active = true;
+          // Dock the Electron window next to the IosScreenCaptureTool mirror window
+          window.dockApi
+            ?.attach(selectedDevice.value.serial, "ios")
+            .then((r) => {
+              if (!r.success)
+                console.warn("[Dock] No se pudo hacer dock (iOS):", r.error);
+            });
+        }
+        showNotification(
+          res.message || "Mirror iOS iniciado",
+          res.success ? "success" : "error",
+        );
+      } else if (action === "stop_mirror") {
+        const res = await iosApi.stopMirror(selectedDevice.value.serial);
+        if (res.success) {
+          selectedDevice.value.active = false;
+          const dev = devices.value.find(
+            (d) => d.serial === selectedDevice.value!.serial,
+          );
+          if (dev) dev.active = false;
+          // Undock: allow the Electron window to move freely
+          window.dockApi?.detach();
+        }
+        showNotification(
+          res.message || "Mirror iOS detenido",
+          res.success ? "success" : "error",
+        );
+      } else if (action === "screenshot") {
+        const res = await iosApi.takeScreenshot(selectedDevice.value.serial);
+        if (res.success && res.data) {
+          const filename = (res.data as any).filename ?? "";
+          const fullPath = (res.data as any).full_path;
+          let clipboardMessage = "";
+
+          if (fullPath && window.clipboardApi) {
+            const clipboardResult =
+              await window.clipboardApi.copyImagePath(fullPath);
+            clipboardMessage = clipboardResult.success
+              ? " y copiada al portapapeles"
+              : " (no se pudo copiar al portapapeles)";
+          }
+
+          showNotification(
+            `Captura guardada: ${filename}${clipboardMessage}`,
+            "success",
+            "Abrir carpeta",
+            () => deviceApi.openScreenshotsFolder().catch(() => {}),
+          );
+        } else {
+          showNotification(
+            res.message || "Error al capturar pantalla",
+            "error",
+          );
+        }
+      } else {
+        showNotification("Acción todavía no soportada para iOS", "warning");
+      }
+    } catch (error) {
+      showNotification("Error al ejecutar acción iOS", "error");
     } finally {
       actionLoading.value = false;
     }

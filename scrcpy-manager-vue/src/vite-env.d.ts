@@ -9,10 +9,20 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 interface DockApi {
-  attach(serial: string): Promise<{ success: boolean; error?: string }>;
+  attach(
+    serial: string,
+    platform?: string,
+  ): Promise<{ success: boolean; error?: string }>;
   detach(): Promise<{ success: boolean }>;
+}
+
+interface ClipboardApi {
+  copyImagePath(
+    filePath: string,
+  ): Promise<{ success: boolean; error?: string }>;
 }
 
 declare interface Window {
   dockApi?: DockApi;
+  clipboardApi?: ClipboardApi;
 }

@@ -1,13 +1,16 @@
 /**
  * windowManager.ts
- * Docks the Electron control-panel window alongside the scrcpy mirror window.
+ * Docks the Electron control-panel window alongside a device mirror window
+ * (scrcpy for Android, IosScreenCaptureTool for iOS).
  *
  * Flow:
- *  1. scrcpy is launched with  --window-title "MRT-{serial}"
- *  2. Renderer calls IPC  "dock:attach" with the serial
+ *  1. scrcpy is launched with --window-title "MRT-{serial}" (one window per serial);
+ *     IosScreenCaptureTool always uses its fixed title "iOS Screen Capture Tool"
+ *     (it only supports one connected device at a time, so no per-udid title is needed).
+ *  2. Renderer calls IPC "dock:attach" with the serial and platform
  *  3. We poll User32 until FindWindowW returns a valid HWND
- *  4. We read scrcpy's rect and reposition the Electron window to the right of it
- *  5. A periodic sync keeps both windows aligned while the user moves scrcpy
+ *  4. We read the mirror window's rect and reposition the Electron window to its right
+ *  5. A periodic sync keeps both windows aligned while the user moves the mirror window
  *  6. IPC "dock:detach" stops syncing and restores the Electron window to its default size
  */
 
@@ -73,6 +76,19 @@ let lastScrcpyRect = { left: 0, top: 0, right: 0, bottom: 0 };
  */
 export function scrcpyWindowTitle(serial: string): string {
   return `MRT-${serial}`;
+}
+
+/**
+ * Fixed window title of IosScreenCaptureTool (Tools/iOS/mirror/iosscreencapture).
+ * Not parameterized per-device: the tool only supports one connected iOS device
+ * at a time, so there's no serial to distinguish between windows.
+ */
+export const IOS_SCREEN_CAPTURE_WINDOW_TITLE = "iOS Screen Capture Tool";
+
+function mirrorWindowTitle(serial: string, platform: string): string {
+  return platform === "ios"
+    ? IOS_SCREEN_CAPTURE_WINDOW_TITLE
+    : scrcpyWindowTitle(serial);
 }
 
 function getWindowRect(hwnd: unknown): typeof lastScrcpyRect | null {
@@ -161,18 +177,20 @@ function syncWindows(
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * Attach the Electron window alongside the scrcpy window for `serial`.
- * Returns true if the scrcpy window was found, false on timeout.
+ * Attach the Electron window alongside the mirror window for `serial`
+ * (scrcpy for `platform === "android"`, IosScreenCaptureTool for `"ios"`).
+ * Returns true if the mirror window was found, false on timeout.
  */
 export async function attachToMirror(
   win: BrowserWindow,
   serial: string,
+  platform: string = "android",
 ): Promise<boolean> {
   // Stop any previous sync
   detachFromMirror();
 
-  const title = scrcpyWindowTitle(serial);
-  console.log("[WindowManager] Buscando ventana scrcpy:", title);
+  const title = mirrorWindowTitle(serial, platform);
+  console.log("[WindowManager] Buscando ventana de mirror:", title);
 
   let scrcpyHwnd: unknown;
   try {
@@ -184,14 +202,14 @@ export async function attachToMirror(
 
   if (!scrcpyHwnd) {
     console.warn(
-      "[WindowManager] Ventana scrcpy NO encontrada (timeout 10 s). Título buscado:",
+      "[WindowManager] Ventana de mirror NO encontrada (timeout 10 s). Título buscado:",
       title,
     );
     return false;
   }
 
   console.log(
-    "[WindowManager] Ventana scrcpy encontrada, haciendo dock. HWND=",
+    "[WindowManager] Ventana de mirror encontrada, haciendo dock. HWND=",
     scrcpyHwnd,
   );
 

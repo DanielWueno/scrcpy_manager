@@ -86,7 +86,7 @@
             {{
               device.platform && device.platform.toLowerCase() === "android"
                 ? device.android_version
-                : device.ios_version
+                : device.iosVersion
             }}
           </div>
         </div>
@@ -111,7 +111,11 @@
               >
               <span>
                 Mirror en ejecución - Controla el dispositivo desde la ventana
-                scrcpy
+                {{
+                  device.platform && device.platform.toLowerCase() === "android"
+                    ? "scrcpy"
+                    : "iOS Screen Capture Tool"
+                }}
               </span>
             </div>
           </v-alert>
