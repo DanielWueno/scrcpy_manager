@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { Device } from "../../types";
+  import type { Device } from "../../types/common";
   import MirrorOptions from "./MirrorOptions.vue";
   import DeviceActions from "./DeviceActions.vue";
 

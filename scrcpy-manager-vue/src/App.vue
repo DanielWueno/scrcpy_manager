@@ -51,7 +51,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from "vue";
   import * as signalR from "@microsoft/signalr";
-  import type { Device } from "./types";
+  import type { Device } from "./types/common";
   import type { IOSDeviceResponse } from "./types/ios";
   import DeviceList from "./components/DeviceList.vue";
   import DeviceControls from "./components/DeviceControls.vue";

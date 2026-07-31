@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ApiResponse } from "../types";
+import type { ApiResponse } from "../types/common";
 import type { IOSDeviceResponse, IOSDeviceStatus } from "../types/ios";
 
 const API_BASE_URL =

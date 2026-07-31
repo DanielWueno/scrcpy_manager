@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { Device } from "../types";
+  import type { Device } from "../../types/common";
 
   interface Props {
     device: Device;

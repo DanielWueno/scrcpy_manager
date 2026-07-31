@@ -177,7 +177,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from "vue";
-  import type { Device } from "../types";
+  import type { Device } from "../types/common";
 
   interface Props {
     device: Device | null;

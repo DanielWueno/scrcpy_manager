@@ -4,7 +4,7 @@ import type {
   DevicesResponse,
   ApiResponse,
   DeviceAction,
-} from "../types";
+} from "../types/common";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:59399/api";

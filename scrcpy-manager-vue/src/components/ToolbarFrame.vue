@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { Device, DeviceAction } from "../types";
+  import type { Device, DeviceAction } from "../types/common";
 
   interface Props {
     device: Device | null;

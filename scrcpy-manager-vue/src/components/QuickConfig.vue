@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
   import { ref, watch } from "vue";
-  import type { ConnectionOptions } from "../types";
+  import type { ConnectionOptions } from "../types/common";
 
   interface Props {
     modelValue: ConnectionOptions;
