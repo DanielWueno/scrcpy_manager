@@ -1,17 +1,11 @@
-import axios from "axios";
 import type { ApiResponse } from "../types/common";
 import type { IOSDeviceResponse, IOSDeviceStatus } from "../types/ios";
+import { createApiClient } from "./httpClient";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:59399/api";
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const api = createApiClient(API_BASE_URL);
 
 export const iosApi = {
   async getDevices(): Promise<IOSDeviceResponse[]> {

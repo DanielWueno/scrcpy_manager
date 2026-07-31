@@ -1,45 +1,15 @@
-import axios from "axios";
 import type {
   Device,
   DevicesResponse,
   ApiResponse,
   DeviceAction,
 } from "../types/common";
+import { createApiClient } from "./httpClient";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:59399/api";
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Interceptor para request
-api.interceptors.request.use(
-  (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    return config;
-  },
-  (error) => {
-    console.error("API Request Error:", error);
-    return Promise.reject(error);
-  },
-);
-
-// Interceptor para response
-api.interceptors.response.use(
-  (response) => {
-    console.log(`API Response: ${response.status} ${response.config.url}`);
-    return response;
-  },
-  (error) => {
-    console.error("API Error:", error);
-    return Promise.reject(error);
-  },
-);
+const api = createApiClient(API_BASE_URL);
 
 export const deviceApi = {
   // Obtener dispositivos Android
@@ -52,18 +22,13 @@ export const deviceApi = {
     };
   },
 
-  // Actualizar lista de dispositivos (no existe endpoint, usar getDevices)
-  async refreshDevices(): Promise<DevicesResponse> {
-    return await this.getDevices();
-  },
-
   // Iniciar mirror (mapear a tu endpoint)
   async connectDevice(
     serial: string,
     options: { options: Record<string, any> },
   ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
-      `/Android/devices/${serial}/mirror/start`,
+      `/android/devices/${serial}/mirror/start`,
       { options: options.options },
     );
     return response.data;
@@ -73,21 +38,6 @@ export const deviceApi = {
   async disconnectDevice(serial: string): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(
       `/android/devices/${serial}/mirror/stop`,
-    );
-    return response.data;
-  },
-
-  // Tomar screenshot
-  async takeScreenshotDownload(
-    serial: string,
-    filename: string,
-  ): Promise<Blob> {
-    const response = await api.post(
-      `/android/devices/${serial}/screenshot`,
-      { filename },
-      {
-        responseType: "blob",
-      },
     );
     return response.data;
   },
@@ -179,30 +129,6 @@ export const deviceApi = {
       connected: response.data.connected,
       active: response.data.mirror_active,
     };
-  },
-
-  // Actualizar alias (no implementado en API, retornar success por ahora)
-  async updateDeviceAlias(
-    _serial: string,
-    _alias: string,
-  ): Promise<{
-    success: boolean;
-    message?: string;
-    error?: string;
-  }> {
-    try {
-      // Por ahora retornar éxito, puedes implementar esto después
-      return {
-        success: true,
-        message: "Alias actualizado correctamente",
-      };
-    } catch (error) {
-      console.error("Error updating device alias:", error);
-      return {
-        success: false,
-        error: "Error al actualizar alias",
-      };
-    }
   },
 };
 
