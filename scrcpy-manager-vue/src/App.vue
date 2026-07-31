@@ -28,7 +28,7 @@
               :device="selectedDevice"
               :deviceStatus="selectedDeviceStatus"
               :actionLoading="actionLoading"
-              @execute-action="executeDeviceActionWithPayload"
+              @execute-action="executeDeviceAction"
             />
           </v-col>
         </v-row>
@@ -50,7 +50,6 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from "vue";
-  import * as signalR from "@microsoft/signalr";
   import type { Device } from "./types/common";
   import type { IOSDeviceResponse } from "./types/ios";
   import DeviceList from "./components/DeviceList.vue";
@@ -58,6 +57,8 @@
   import AppSnackbar from "./components/AppSnackbar.vue";
   import { deviceApi } from "./services/api";
   import { iosApi } from "./services/iosApi";
+  import { useDeviceHub } from "./composables/useDeviceHub";
+  import { useDeviceActions } from "./composables/useDeviceActions";
 
   function mapIOSDevice(d: IOSDeviceResponse): Device {
     return {
@@ -85,59 +86,6 @@
     onAction?: () => void;
   }>({ show: false, message: "", color: "info" });
 
-  // SignalR
-  const SIGNALR_URL =
-    import.meta.env.VITE_SIGNALR_URL || "http://localhost:59399/hubs/android";
-  const hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl(SIGNALR_URL)
-    .withAutomaticReconnect()
-    .configureLogging(signalR.LogLevel.Warning)
-    .build();
-
-  hubConnection.on("DeviceConnected", (device: any) => {
-    const serial = device.serial ?? device.Serial;
-    if (!devices.value.find((d) => d.serial === serial)) {
-      devices.value.push({
-        id: serial,
-        serial,
-        name: device.name ?? device.Name ?? serial,
-        brand: device.brand ?? device.Brand,
-        model: device.model ?? device.Model,
-        androidVersion: device.androidVersion ?? device.AndroidVersion,
-        platform: device.platform ?? device.Platform ?? "android",
-        active: false,
-      } as Device);
-      showNotification(
-        `Dispositivo conectado: ${device.name ?? serial}`,
-        "success",
-      );
-    }
-  });
-
-  hubConnection.on("DeviceDisconnected", (serial: string) => {
-    const idx = devices.value.findIndex((d) => d.serial === serial);
-    if (idx !== -1) {
-      const name = devices.value[idx].name ?? serial;
-      devices.value.splice(idx, 1);
-      if (selectedDevice.value?.serial === serial) {
-        selectedDevice.value = null;
-        selectedDeviceStatus.value = null;
-      }
-      showNotification(`Dispositivo desconectado: ${name}`, "warning");
-    }
-  });
-
-  hubConnection.on("MirrorStopped", (serial: string) => {
-    const dev = devices.value.find((d) => d.serial === serial);
-    if (dev) dev.active = false;
-    if (selectedDevice.value?.serial === serial) {
-      selectedDevice.value.active = false;
-    }
-    // Undock when scrcpy closes externally
-    window.dockApi?.detach();
-    showNotification(`Mirror cerrado: ${serial}`, "info");
-  });
-
   const allDevices = computed(() => devices.value);
 
   function showNotification(
@@ -154,6 +102,19 @@
       onAction,
     };
   }
+
+  const hub = useDeviceHub(
+    devices,
+    selectedDevice,
+    selectedDeviceStatus,
+    showNotification,
+  );
+  const { executeDeviceAction } = useDeviceActions(
+    selectedDevice,
+    devices,
+    actionLoading,
+    showNotification,
+  );
 
   async function loadDevices() {
     refreshing.value = true;
@@ -176,25 +137,15 @@
 
   async function handleDeviceSelected(device: Device) {
     // Salir del grupo del dispositivo anterior
-    if (
-      selectedDevice.value &&
-      selectedDevice.value.serial !== device.serial &&
-      hubConnection.state === signalR.HubConnectionState.Connected
-    ) {
-      await hubConnection
-        .invoke("LeaveDeviceGroup", selectedDevice.value.serial)
-        .catch(() => {});
+    if (selectedDevice.value && selectedDevice.value.serial !== device.serial) {
+      await hub.leaveDeviceGroup(selectedDevice.value.serial);
     }
 
     selectedDevice.value = device;
     selectedDeviceStatus.value = null;
 
     // Unirse al grupo del nuevo dispositivo para recibir MirrorStopped, MirrorStarted, etc.
-    if (hubConnection.state === signalR.HubConnectionState.Connected) {
-      await hubConnection
-        .invoke("JoinDeviceGroup", device.serial)
-        .catch(() => {});
-    }
+    await hub.joinDeviceGroup(device.serial);
 
     try {
       selectedDeviceStatus.value =
@@ -203,185 +154,6 @@
           : await deviceApi.getDeviceStatus(device.serial);
     } catch (error) {
       showNotification("Error al obtener estado del dispositivo", "error");
-    }
-  }
-
-  async function executeDeviceActionWithPayload(action: string, payload?: any) {
-    if (!selectedDevice.value) return;
-    if (selectedDevice.value.platform === "ios") {
-      await executeIOSDeviceAction(action);
-      return;
-    }
-    actionLoading.value = true;
-    try {
-      if (action === "start_mirror") {
-        // Siempre enviar las cuatro opciones, con true/false según los switches
-        const optionsObj = {
-          stayAwake: Boolean(payload?.stayAwake),
-          noAudio: Boolean(payload?.noAudio),
-          showTouches: Boolean(payload?.showTouches),
-          turnScreenOff: Boolean(payload?.turnScreenOff),
-        };
-        console.log("Payload enviado a la API:", { options: optionsObj });
-        const res = await deviceApi.connectDevice(selectedDevice.value.serial, {
-          options: optionsObj,
-        });
-        if (res.success) {
-          selectedDevice.value.active = true;
-          const dev = devices.value.find(
-            (d) => d.serial === selectedDevice.value!.serial,
-          );
-          if (dev) dev.active = true;
-          // Dock the Electron window next to the scrcpy mirror window
-          window.dockApi
-            ?.attach(selectedDevice.value.serial, "android")
-            .then((r) => {
-              if (!r.success)
-                console.warn("[Dock] No se pudo hacer dock:", r.error);
-            });
-        }
-        showNotification(
-          res.message || "Mirror iniciado",
-          res.success ? "success" : "error",
-        );
-      } else if (action === "stop_mirror") {
-        const res = await deviceApi.disconnectDevice(
-          selectedDevice.value.serial,
-        );
-        if (res.success) {
-          selectedDevice.value.active = false;
-          const dev = devices.value.find(
-            (d) => d.serial === selectedDevice.value!.serial,
-          );
-          if (dev) dev.active = false;
-          // Undock: allow the Electron window to move freely
-          window.dockApi?.detach();
-        }
-        showNotification(
-          res.message || "Mirror detenido",
-          res.success ? "success" : "error",
-        );
-      } else if (action === "screenshot") {
-        const res = await deviceApi.deviceAction(selectedDevice.value.serial, {
-          type: action,
-          ...payload,
-        });
-        if (res.success && res.data) {
-          const filename = (res.data as any).filename ?? "";
-          const fullPath = (res.data as any).full_path;
-          let clipboardMessage = "";
-
-          if (fullPath && window.clipboardApi) {
-            const clipboardResult =
-              await window.clipboardApi.copyImagePath(fullPath);
-            clipboardMessage = clipboardResult.success
-              ? " y copiada al portapapeles"
-              : " (no se pudo copiar al portapapeles)";
-          }
-
-          showNotification(
-            `Captura guardada: ${filename}${clipboardMessage}`,
-            "success",
-            "Abrir carpeta",
-            () => deviceApi.openScreenshotsFolder().catch(() => {}),
-          );
-        } else {
-          showNotification(
-            res.message || "Error al capturar pantalla",
-            "error",
-          );
-        }
-      } else {
-        // Otras acciones genéricas
-        const res = await deviceApi.deviceAction(selectedDevice.value.serial, {
-          type: action,
-          ...payload,
-        });
-        showNotification(
-          res.message || "Acción ejecutada",
-          res.success ? "success" : "error",
-        );
-      }
-    } catch (error) {
-      showNotification("Error al ejecutar acción", "error");
-    } finally {
-      actionLoading.value = false;
-    }
-  }
-
-  async function executeIOSDeviceAction(action: string) {
-    if (!selectedDevice.value) return;
-    actionLoading.value = true;
-    try {
-      if (action === "start_mirror") {
-        const res = await iosApi.startMirror(selectedDevice.value.serial);
-        if (res.success) {
-          selectedDevice.value.active = true;
-          const dev = devices.value.find(
-            (d) => d.serial === selectedDevice.value!.serial,
-          );
-          if (dev) dev.active = true;
-          // Dock the Electron window next to the IosScreenCaptureTool mirror window
-          window.dockApi
-            ?.attach(selectedDevice.value.serial, "ios")
-            .then((r) => {
-              if (!r.success)
-                console.warn("[Dock] No se pudo hacer dock (iOS):", r.error);
-            });
-        }
-        showNotification(
-          res.message || "Mirror iOS iniciado",
-          res.success ? "success" : "error",
-        );
-      } else if (action === "stop_mirror") {
-        const res = await iosApi.stopMirror(selectedDevice.value.serial);
-        if (res.success) {
-          selectedDevice.value.active = false;
-          const dev = devices.value.find(
-            (d) => d.serial === selectedDevice.value!.serial,
-          );
-          if (dev) dev.active = false;
-          // Undock: allow the Electron window to move freely
-          window.dockApi?.detach();
-        }
-        showNotification(
-          res.message || "Mirror iOS detenido",
-          res.success ? "success" : "error",
-        );
-      } else if (action === "screenshot") {
-        const res = await iosApi.takeScreenshot(selectedDevice.value.serial);
-        if (res.success && res.data) {
-          const filename = (res.data as any).filename ?? "";
-          const fullPath = (res.data as any).full_path;
-          let clipboardMessage = "";
-
-          if (fullPath && window.clipboardApi) {
-            const clipboardResult =
-              await window.clipboardApi.copyImagePath(fullPath);
-            clipboardMessage = clipboardResult.success
-              ? " y copiada al portapapeles"
-              : " (no se pudo copiar al portapapeles)";
-          }
-
-          showNotification(
-            `Captura guardada: ${filename}${clipboardMessage}`,
-            "success",
-            "Abrir carpeta",
-            () => deviceApi.openScreenshotsFolder().catch(() => {}),
-          );
-        } else {
-          showNotification(
-            res.message || "Error al capturar pantalla",
-            "error",
-          );
-        }
-      } else {
-        showNotification("Acción todavía no soportada para iOS", "warning");
-      }
-    } catch (error) {
-      showNotification("Error al ejecutar acción iOS", "error");
-    } finally {
-      actionLoading.value = false;
     }
   }
 
@@ -408,15 +180,7 @@
   onMounted(async () => {
     loadDevices();
     try {
-      await hubConnection.start();
-      // Reincorporarse al grupo del dispositivo seleccionado tras reconexión
-      hubConnection.onreconnected(async () => {
-        if (selectedDevice.value) {
-          await hubConnection
-            .invoke("JoinDeviceGroup", selectedDevice.value.serial)
-            .catch(() => {});
-        }
-      });
+      await hub.start();
       const status = await deviceApi.getMonitoringStatus();
       monitoring.value = status.isMonitoring;
       if (!monitoring.value) {
@@ -430,7 +194,7 @@
   });
 
   onUnmounted(async () => {
-    await hubConnection.stop();
+    await hub.stop();
   });
 </script>
 
