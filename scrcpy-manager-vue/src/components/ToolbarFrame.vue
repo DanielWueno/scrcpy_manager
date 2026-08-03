@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <v-card-subtitle class="px-0"> Multimedia </v-card-subtitle>
 
@@ -12,7 +12,7 @@
           :loading="loading"
           block
           variant="tonal"
-          color="blue-grey-darken-1"
+          color="secondary"
           @click="$emit('action-payload', 'screenshot', { download: true })"
         >
           <v-icon>mdi-camera</v-icon>
@@ -25,7 +25,7 @@
           :loading="loading"
           block
           variant="tonal"
-          color="red-darken-2"
+          color="error"
           @click="$emit('action', 'record')"
         >
           <v-icon>mdi-record-circle</v-icon>
@@ -44,7 +44,7 @@
           :disabled="!device || loading"
           block
           variant="tonal"
-          color="amber-darken-2"
+          color="warning"
           size="small"
           @click="$emit('action', 'screen_off')"
         >
@@ -57,7 +57,7 @@
           :disabled="!device || loading"
           block
           variant="tonal"
-          color="teal-darken-1"
+          color="success"
           size="small"
           @click="$emit('action', 'screen_on')"
         >
@@ -70,7 +70,7 @@
           :disabled="!device || loading"
           block
           variant="tonal"
-          color="blue-grey-darken-2"
+          color="secondary"
           size="small"
           @click="$emit('action', 'mirror_screen_off')"
         >
@@ -83,7 +83,7 @@
           :disabled="!device || loading"
           block
           variant="tonal"
-          color="indigo-darken-1"
+          color="primary"
           size="small"
           @click="$emit('action', 'mirror_screen_on')"
         >
@@ -100,7 +100,7 @@
           :disabled="!device || loading"
           block
           variant="outlined"
-          color="blue-grey-darken-1"
+          color="secondary"
           size="small"
           @click="$emit('action', 'home')"
         >
@@ -112,7 +112,7 @@
           :disabled="!device || loading"
           block
           variant="outlined"
-          color="blue-grey-darken-1"
+          color="secondary"
           size="small"
           @click="$emit('action', 'back')"
         >
@@ -124,7 +124,7 @@
           :disabled="!device || loading"
           block
           variant="outlined"
-          color="blue-grey-darken-1"
+          color="secondary"
           size="small"
           @click="$emit('action', 'recent')"
         >
@@ -150,3 +150,4 @@
     "action-payload": [action: DeviceAction, payload: any];
   }>();
 </script>
+

@@ -1,16 +1,49 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap");
 
 :root {
-  --primary-gradient: linear-gradient(
-    135deg,
-    rgb(var(--v-theme-primary)) 0%,
-    rgb(var(--v-theme-primary)) 100%
-  );
-  --accent-gradient: linear-gradient(135deg, #1a535c 0%, #ff9800 100%);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --shadow-glow: 0 8px 32px rgba(255, 107, 53, 0.3);
+  --cyan: #0381ff;
+  --core: #1920f7;
+  --purple: #8b5cf6;
+  --green: #34d399;
+  --yellow: #facc15;
+  --orange: #f97316;
+
+  --r-xl: 34px;
+  --r-lg: 24px;
+  --r-md: 16px;
+  --r-sm: 11px;
+
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Superficies de vidrio por tema. Vuetify aplica .v-theme--light / .v-theme--dark
+   en la raíz de la app segun el tema activo (ver useAppTheme). */
+.v-theme--light {
+  --bg-a: #eef1fb;
+  --bg-b: #e4e9fa;
+  --bg-c: #f7f4fb;
+  --glass: rgba(255, 255, 255, 0.52);
+  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-border-soft: rgba(20, 30, 60, 0.08);
+  --shadow: 0 20px 50px -18px rgba(20, 30, 70, 0.2);
+  --shadow-sm: 0 6px 18px -8px rgba(20, 30, 70, 0.16);
+  --sheen: rgba(255, 255, 255, 0.65);
+  --blob-op: 0.5;
+}
+
+.v-theme--dark {
+  --bg-a: #04060d;
+  --bg-b: #070b18;
+  --bg-c: #0a0f1e;
+  --glass: rgba(22, 27, 45, 0.55);
+  --glass-strong: rgba(26, 32, 52, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border-soft: rgba(255, 255, 255, 0.08);
+  --shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  --sheen: rgba(255, 255, 255, 0.1);
+  --blob-op: 0.42;
 }
 
 * {
@@ -18,227 +51,132 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   overflow-x: hidden;
 }
 
-.glass-effect {
-  backdrop-filter: blur(20px);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  transition: var(--transition-smooth);
+.v-application {
+  font-family: "IBM Plex Sans", sans-serif !important;
+  /* Vuetify pinta un background solido con el token de tema; lo apagamos
+     para que se vea el fondo con blobs de .app-backdrop detras. */
+  background: transparent !important;
 }
 
-.btn-hover-effect {
-  position: relative;
-  overflow: hidden;
-  transition: var(--transition-smooth);
-}
-
-.btn-hover-effect::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: all 0.4s ease;
-  z-index: 0;
-}
-
-.btn-hover-effect:hover::before {
-  width: 200px;
-  height: 200px;
-}
-
-.btn-hover-effect:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-glow);
-}
-
-.fade-in {
-  animation: fadeIn 0.6s ease-out;
-}
-
-.slide-up {
-  animation: slideUp 0.6s ease-out;
-}
-
-.scale-in {
-  animation: scaleIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.particles-bg {
+/* Fondo ambiental unico detras de toda la app: los blobs de color de marca
+   se ven a traves del vidrio translucido de las tarjetas de encima. Una
+   sola capa fija en vez de blur por tarjeta evita apilar backdrop-filter
+   sobre docenas de v-card en la lista de dispositivos. */
+.app-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  inset: 0;
   z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(160deg, var(--bg-a), var(--bg-b) 55%, var(--bg-c));
+  transition: background 0.5s ease;
 }
 
-.particle {
+.app-backdrop .blob {
   position: absolute;
-  background: radial-gradient(circle, rgba(255, 107, 53, 0.3), transparent);
   border-radius: 50%;
-  animation: float 6s ease-in-out infinite;
+  filter: blur(120px);
+  opacity: var(--blob-op);
+  transition: opacity 0.5s ease;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+.app-backdrop .blob-1 {
+  width: 700px;
+  height: 700px;
+  top: -12%;
+  left: -6%;
+  background: var(--cyan);
+}
+
+.app-backdrop .blob-2 {
+  width: 620px;
+  height: 620px;
+  top: 5%;
+  right: -8%;
+  background: var(--purple);
+}
+
+.app-backdrop .blob-3 {
+  width: 640px;
+  height: 640px;
+  bottom: -14%;
+  left: 30%;
+  background: var(--green);
+}
+
+/* Toggle de tema flotante */
+.theme-toggle-btn {
+  position: fixed !important;
+  top: 18px !important;
+  right: 18px !important;
+  z-index: 50 !important;
+  background: var(--glass-strong) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* --- Overrides de superficies Vuetify: vidrio esmerilado --- */
+.v-card,
+.v-list,
+.v-snackbar__wrapper,
+.v-overlay__content .v-card,
+.v-expansion-panel {
+  background: var(--glass) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--sheen) !important;
+  border-radius: var(--r-md) !important;
+}
+
+.v-card.v-card--variant-outlined {
+  background: var(--glass) !important;
+}
+
+.v-btn {
+  border-radius: var(--r-sm) !important;
+  transition: var(--transition-smooth);
+}
+
+.v-btn.v-btn--variant-tonal,
+.v-btn.v-btn--variant-outlined {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.v-chip {
+  border-radius: 100px !important;
+}
+
+.v-list-item {
+  border-radius: var(--r-sm) !important;
 }
 
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  margin: 2px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--primary-gradient);
+  background: var(--glass-border-soft);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-gradient);
+  background: color-mix(in srgb, var(--cyan) 35%, transparent);
   background-clip: content-box;
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-.gradient-text {
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 700;
-}
-
-.gradient-text-accent {
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 600;
-}
-
-.card-3d {
-  transform-style: preserve-3d;
-  transition: var(--transition-smooth);
-}
-
-.card-3d:hover {
-  transform: rotateY(5deg) rotateX(5deg);
-}
-
-.custom-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 107, 53, 0.3);
-  border-radius: 50%;
-  border-top-color: #ff6b35;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.neon-glow {
-  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor,
-    0 0 15px currentColor, 0 0 20px currentColor;
-}
-
-.neon-box {
-  box-shadow: 0 0 10px rgba(255, 107, 53, 0.5), 0 0 20px rgba(255, 107, 53, 0.3),
-    0 0 30px rgba(255, 107, 53, 0.1);
-}
-
-.mobile-only {
-  display: none;
-}
-
-.desktop-only {
-  display: block;
-}
-
-@media (max-width: 768px) {
-  .mobile-only {
-    display: block;
-  }
-
-  .desktop-only {
-    display: none;
-  }
-
-  .card-3d:hover {
-    transform: none;
-  }
-}
-
-.v-theme--dark {
-  --glass-bg: rgba(30, 30, 46, 0.8);
-  --glass-border: rgba(255, 107, 53, 0.3);
-  --shadow-glow: 0 8px 32px rgba(255, 107, 53, 0.4);
-}
-
-.v-theme--light {
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 78, 137, 0.3);
-  --shadow-glow: 0 8px 32px rgba(0, 78, 137, 0.3);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -250,13 +188,6 @@ body {
 }
 
 .v-btn:focus-visible {
-  outline: 2px solid #ff6b35;
+  outline: 2px solid var(--cyan);
   outline-offset: 2px;
-}
-
-.custom-tooltip {
-  background: var(--primary-gradient) !important;
-  color: white !important;
-  border-radius: 8px !important;
-  font-weight: 500 !important;
 }

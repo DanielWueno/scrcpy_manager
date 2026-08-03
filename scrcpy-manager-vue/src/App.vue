@@ -1,5 +1,22 @@
 <template>
-  <v-app theme="light">
+  <v-app>
+    <div class="app-backdrop">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+    </div>
+
+    <v-btn
+      class="theme-toggle-btn"
+      icon
+      variant="text"
+      size="small"
+      :aria-label="theme.global.current.value.dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+      @click="toggleTheme"
+    >
+      <v-icon>{{ theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny" }}</v-icon>
+    </v-btn>
+
     <v-main>
       <v-container fluid>
         <v-row>
@@ -59,6 +76,9 @@
   import { iosApi } from "./services/iosApi";
   import { useDeviceHub } from "./composables/useDeviceHub";
   import { useDeviceActions } from "./composables/useDeviceActions";
+  import { useAppTheme } from "./composables/useAppTheme";
+
+  const { theme, toggleTheme } = useAppTheme();
 
   function mapIOSDevice(d: IOSDeviceResponse): Device {
     return {
@@ -152,6 +172,13 @@
         device.platform === "ios"
           ? await iosApi.getDeviceStatus(device.serial)
           : await deviceApi.getDeviceStatus(device.serial);
+
+      // Si el mirror de iOS ya estaba corriendo (p.ej. tras recargar la app), traer
+      // la URL del stream MJPEG para poder mostrarla embebida sin tener que
+      // reiniciar el mirror.
+      if (device.platform === "ios" && selectedDeviceStatus.value?.mirror_url) {
+        device.mirrorUrl = `${selectedDeviceStatus.value.mirror_url}?t=${Date.now()}`;
+      }
     } catch (error) {
       showNotification("Error al obtener estado del dispositivo", "error");
     }
