@@ -9,6 +9,7 @@ import {
 import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
 import { attachToMirror, detachFromMirror } from "./windowManager";
+import { openMirrorWindow, closeMirrorWindow } from "./mirrorWindow";
 
 let apiProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
@@ -136,6 +137,18 @@ app.whenReady().then(async () => {
     detachFromMirror();
     return { success: true };
   });
+
+  // ── IPC: iOS mirror (go-ios MJPEG) in its own floating window, like scrcpy ──
+  ipcMain.handle("mirror:open", (_event, url: string, title: string) => {
+    openMirrorWindow(url, title);
+    return { success: true };
+  });
+
+  ipcMain.handle("mirror:close", () => {
+    closeMirrorWindow();
+    return { success: true };
+  });
+  // ──────────────────────────────────────────────────────────────────────────
 
   ipcMain.handle("clipboard:copy-image-path", (_event, filePath: string) => {
     try {

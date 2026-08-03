@@ -15,3 +15,10 @@ contextBridge.exposeInMainWorld("clipboardApi", {
   copyImagePath: (filePath: string) =>
     ipcRenderer.invoke("clipboard:copy-image-path", filePath),
 });
+
+// Floating mirror window (iOS/go-ios MJPEG) - independent of the main app window
+contextBridge.exposeInMainWorld("mirrorApi", {
+  open: (url: string, title: string) =>
+    ipcRenderer.invoke("mirror:open", url, title),
+  close: () => ipcRenderer.invoke("mirror:close"),
+});

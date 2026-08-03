@@ -74,21 +74,39 @@ export function useDeviceActions(
   actionLoading: Ref<boolean>,
   notify: Notify,
 ) {
-  function setActive(active: boolean) {
+  function setActive(active: boolean, mirrorUrl?: string) {
     const device = selectedDevice.value;
     if (!device) return;
     device.active = active;
+    device.mirrorUrl = active ? mirrorUrl : undefined;
     const tracked = devices.value.find((d) => d.serial === device.serial);
-    if (tracked) tracked.active = active;
-    if (active) {
-      window.dockApi
-        ?.attach(device.serial, platformFor(device))
-        .then((r) => {
-          if (!r.success)
-            console.warn("[Dock] No se pudo hacer dock:", r.error);
-        });
+    if (tracked) {
+      tracked.active = active;
+      tracked.mirrorUrl = device.mirrorUrl;
+    }
+
+    if (platformFor(device) === "android") {
+      // scrcpy abre su propia ventana nativa - Electron se dockea al lado via HWND.
+      if (active) {
+        window.dockApi
+          ?.attach(device.serial, platformFor(device))
+          .then((r) => {
+            if (!r.success)
+              console.warn("[Dock] No se pudo hacer dock:", r.error);
+          });
+      } else {
+        window.dockApi?.detach();
+      }
+      return;
+    }
+
+    // go-ios no abre ninguna ventana (proceso de consola, video servido por HTTP) -
+    // se abre una ventana propia apuntando al stream MJPEG, igual de movible que la
+    // de scrcpy, en vez de embeber el video en el panel principal.
+    if (active && mirrorUrl) {
+      window.mirrorApi?.open(mirrorUrl, `iOS Mirror - ${device.name ?? device.serial}`);
     } else {
-      window.dockApi?.detach();
+      window.mirrorApi?.close();
     }
   }
 
@@ -129,7 +147,14 @@ export function useDeviceActions(
     try {
       if (action === "start_mirror") {
         const res = await actions.startMirror(device.serial, payload);
-        if (res.success) setActive(true);
+        if (res.success) {
+          const rawUrl = (res.data as any)?.mirror_url as string | undefined;
+          // Cache-bust: el puerto/URL es siempre el mismo entre sesiones, pero cada
+          // sesion es una conexion MJPEG nueva - sin esto un <img> que ya tenia esa
+          // src no vuelve a conectar tras un stop/start.
+          const mirrorUrl = rawUrl ? `${rawUrl}${rawUrl.includes("?") ? "&" : "?"}t=${Date.now()}` : undefined;
+          setActive(true, mirrorUrl);
+        }
         notify(res.message || labels.start, res.success ? "success" : "error");
       } else if (action === "stop_mirror") {
         const res = await actions.stopMirror(device.serial);

@@ -39,6 +39,7 @@
     <IOSControls
       v-else-if="device.platform && device.platform.toLowerCase() === 'ios'"
       :device="device"
+      :deviceStatus="deviceStatus"
       :actionLoading="actionLoading"
       @execute-action="
         (action, payload) => $emit('execute-action', action, payload)

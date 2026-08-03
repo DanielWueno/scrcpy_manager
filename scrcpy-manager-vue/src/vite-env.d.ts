@@ -22,7 +22,13 @@ interface ClipboardApi {
   ): Promise<{ success: boolean; error?: string }>;
 }
 
+interface MirrorApi {
+  open(url: string, title: string): Promise<{ success: boolean }>;
+  close(): Promise<{ success: boolean }>;
+}
+
 declare interface Window {
   dockApi?: DockApi;
   clipboardApi?: ClipboardApi;
+  mirrorApi?: MirrorApi;
 }

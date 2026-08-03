@@ -31,6 +31,7 @@ export interface IOSDeviceStatus {
   process_id?: number;
   mirror_mode?: string;
   mirror_executable?: string;
+  mirror_url?: string;
 }
 
 // data payload of POST /api/ios/devices/{udid}/mirror/start
@@ -40,6 +41,8 @@ export interface IOSMirrorStartData {
   executable: string;
   arguments?: string;
   pid: number;
+  port?: number;
+  mirror_url?: string;
   touch_supported: boolean;
 }
 

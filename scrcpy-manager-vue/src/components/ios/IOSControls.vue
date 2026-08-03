@@ -32,15 +32,33 @@
         <v-icon class="mr-2">mdi-camera</v-icon>
         Capturar pantalla
       </v-btn>
+
+      <!-- go-ios (screenshot --stream) no abre ninguna ventana propia, asi que el
+           mirror se muestra en una ventana Electron aparte (ver mirrorWindow.ts en
+           el proceso main) - libre de mover, igual que la ventana de scrcpy. Este
+           boton reabre esa ventana si el usuario la cerro sin detener el mirror. -->
+      <v-btn
+        v-if="device.active && mirrorUrl"
+        variant="tonal"
+        block
+        class="mt-4"
+        @click="openMirrorWindow"
+      >
+        <v-icon class="mr-2">mdi-open-in-new</v-icon>
+        Abrir ventana del mirror
+      </v-btn>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+  import { computed } from "vue";
   import type { Device } from "../../types/common";
+  import type { IOSDeviceStatus } from "../../types/ios";
 
   interface Props {
     device: Device;
+    deviceStatus?: IOSDeviceStatus | null;
     actionLoading: boolean;
   }
 
@@ -52,4 +70,16 @@
   const toggleMirror = () => {
     emit("execute-action", props.device.active ? "stop_mirror" : "start_mirror");
   };
+
+  const mirrorUrl = computed(
+    () => props.device.mirrorUrl || props.deviceStatus?.mirror_url,
+  );
+
+  function openMirrorWindow() {
+    if (!mirrorUrl.value) return;
+    window.mirrorApi?.open(
+      mirrorUrl.value,
+      `iOS Mirror - ${props.device.name ?? props.device.serial}`,
+    );
+  }
 </script>

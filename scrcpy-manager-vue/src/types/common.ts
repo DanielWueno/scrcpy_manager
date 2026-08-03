@@ -11,6 +11,9 @@ export interface Device {
   connected?: boolean;
   active?: boolean;
   last_seen?: string;
+  // Mirror MJPEG de go-ios (solo iOS) - no hay ventana nativa que dockear, se embebe
+  // directo en la UI con un <img>.
+  mirrorUrl?: string;
   [key: string]: unknown;
 }
 
