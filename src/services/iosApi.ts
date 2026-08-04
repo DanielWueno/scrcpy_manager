@@ -1,5 +1,9 @@
 import type { ApiResponse } from "../types/common";
-import type { IOSDeviceResponse, IOSDeviceStatus } from "../types/ios";
+import type {
+  IOSDeviceResponse,
+  IOSDeviceStatus,
+  IOSDriverStatusResponse,
+} from "../types/ios";
 import { createApiClient } from "./httpClient";
 
 const API_BASE_URL =
@@ -40,6 +44,25 @@ export const iosApi = {
     const response = await api.get<ApiResponse>(
       `/ios/devices/${udid}/screenshot`,
       { params: filename ? { filename } : undefined },
+    );
+    return response.data;
+  },
+
+  async getDriverStatus(): Promise<IOSDriverStatusResponse> {
+    const response = await api.get<IOSDriverStatusResponse>(
+      "/ios/drivers/status",
+    );
+    return response.data;
+  },
+
+  // Instala el driver "Apple Mobile Device Service" via winget con un UAC puntual;
+  // la promesa no resuelve hasta que la instalación termina, así que se necesita
+  // más margen que el timeout por defecto del cliente HTTP (10s).
+  async installDriver(): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>(
+      "/ios/drivers/install",
+      undefined,
+      { timeout: 120000 },
     );
     return response.data;
   },

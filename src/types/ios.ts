@@ -46,6 +46,13 @@ export interface IOSMirrorStartData {
   touch_supported: boolean;
 }
 
+// GET /api/ios/drivers/status
+export interface IOSDriverStatusResponse {
+  installed: boolean;
+  supported: boolean;
+  message: string;
+}
+
 // data payload of GET /api/ios/devices/{udid}/screenshot
 export interface IOSScreenshotData {
   filename: string;

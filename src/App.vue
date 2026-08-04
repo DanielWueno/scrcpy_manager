@@ -19,6 +19,7 @@
 
     <v-main>
       <v-container fluid>
+        <IOSDriverBanner @notify="(message, color) => showNotification(message, color)" />
         <v-row>
           <!-- Panel izquierdo: Lista de dispositivos -->
           <v-col
@@ -72,6 +73,7 @@
   import DeviceList from "./components/DeviceList.vue";
   import DeviceControls from "./components/DeviceControls.vue";
   import AppSnackbar from "./components/AppSnackbar.vue";
+  import IOSDriverBanner from "./components/ios/IOSDriverBanner.vue";
   import { deviceApi } from "./services/api";
   import { iosApi } from "./services/iosApi";
   import { useDeviceHub } from "./composables/useDeviceHub";
