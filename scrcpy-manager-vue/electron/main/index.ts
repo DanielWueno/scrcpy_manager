@@ -8,6 +8,8 @@ import {
 } from "electron";
 import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
+import * as http from "http";
+import * as https from "https";
 import { attachToMirror, detachFromMirror } from "./windowManager";
 import { openMirrorWindow, closeMirrorWindow } from "./mirrorWindow";
 
@@ -16,6 +18,65 @@ let mainWindow: BrowserWindow | null = null;
 
 const isDev = !app.isPackaged;
 const API_PORT = 59399;
+
+// Misma convencion que .env.development/.env.production del lado Vue: en dev la API
+// corre con el certificado HTTPS de desarrollo de .NET (launchSettings.json), en prod
+// se levanta explicitamente en HTTP (ver startApi() mas abajo).
+function apiBaseUrl(): string {
+  return isDev
+    ? `https://localhost:${API_PORT}/api`
+    : `http://localhost:${API_PORT}/api`;
+}
+
+// En dev la API corre con el certificado autofirmado de dotnet dev-certs - Chromium (el
+// renderer, via axios) lo acepta porque en esta maquina ya esta confiado en el almacen de
+// Windows, pero el proceso principal de Electron llama por Node puro (no pasa por el motor
+// de red de Chromium), y Node no lee ese almacen de confianza del SO. Como este cliente HTTP
+// solo habla con localhost (nunca un host externo ni uno provisto por el usuario), se
+// desactiva la validacion de certificado solo para este agente puntual en vez de tocar la
+// validacion TLS de todo el proceso.
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+function postIOSAction(
+  udid: string,
+  action: string,
+  payload: Record<string, unknown>,
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  return new Promise((resolvePromise) => {
+    const targetUrl = new URL(
+      `${apiBaseUrl()}/ios/devices/${encodeURIComponent(udid)}/action`,
+    );
+    const body = JSON.stringify({ action, payload });
+    const client = targetUrl.protocol === "https:" ? https : http;
+
+    const req = client.request(
+      targetUrl,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+        },
+        agent: targetUrl.protocol === "https:" ? httpsAgent : undefined,
+      },
+      (res) => {
+        let raw = "";
+        res.on("data", (chunk) => (raw += chunk));
+        res.on("end", () => {
+          try {
+            resolvePromise(JSON.parse(raw));
+          } catch {
+            resolvePromise({ success: false, error: `Respuesta invalida: ${raw}` });
+          }
+        });
+      },
+    );
+
+    req.on("error", (error) => resolvePromise({ success: false, error: error.message }));
+    req.write(body);
+    req.end();
+  });
+}
 
 // In dev mode the .NET API is run manually; in prod it's bundled in resources/api/
 function getApiExecutablePath(): string {
@@ -104,6 +165,9 @@ function createWindow(): void {
       process.env["ELECTRON_RENDERER_URL"] || "http://localhost:3000";
     mainWindow.loadURL(devUrl);
     mainWindow.webContents.openDevTools();
+    mainWindow.webContents.on("console-message", (_e, _level, message) => {
+      console.log("[renderer]", message);
+    });
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
@@ -139,15 +203,69 @@ app.whenReady().then(async () => {
   });
 
   // ── IPC: iOS mirror (go-ios MJPEG) in its own floating window, like scrcpy ──
-  ipcMain.handle("mirror:open", (_event, url: string, title: string) => {
-    openMirrorWindow(url, title);
-    return { success: true };
-  });
+  ipcMain.handle(
+    "mirror:open",
+    (_event, url: string, title: string, udid: string) => {
+      console.log("[mirror:open] received", { url, title, udid });
+      openMirrorWindow(url, title, udid);
+      return { success: true };
+    },
+  );
 
   ipcMain.handle("mirror:close", () => {
     closeMirrorWindow();
     return { success: true };
   });
+
+  // Control tactil real (DeviceKit via IOSControlService) - la ventana del mirror no
+  // tiene su propio origen http (es una pagina data:), asi que estas llamadas van por IPC
+  // en vez de fetch() directo desde el renderer para no depender de la config de CORS.
+  ipcMain.handle(
+    "mirror:tap",
+    (_event, udid: string, x: number, y: number) =>
+      postIOSAction(udid, "tap", { x, y }),
+  );
+
+  ipcMain.handle(
+    "mirror:swipe",
+    (
+      _event,
+      udid: string,
+      fromX: number,
+      fromY: number,
+      toX: number,
+      toY: number,
+      durationMs: number,
+    ) =>
+      postIOSAction(udid, "swipe", {
+        from_x: fromX,
+        from_y: fromY,
+        to_x: toX,
+        to_y: toY,
+        duration_ms: durationMs,
+      }),
+  );
+
+  ipcMain.handle(
+    "mirror:swipe-path",
+    (
+      _event,
+      udid: string,
+      points: { x: number; y: number; t: number }[],
+    ) => postIOSAction(udid, "swipe", { points }),
+  );
+
+  ipcMain.handle(
+    "mirror:longpress",
+    (_event, udid: string, x: number, y: number, durationMs: number) =>
+      postIOSAction(udid, "long_press", { x, y, duration_ms: durationMs }),
+  );
+
+  ipcMain.handle(
+    "mirror:button",
+    (_event, udid: string, name: string) =>
+      postIOSAction(udid, "button", { name }),
+  );
   // ──────────────────────────────────────────────────────────────────────────
 
   ipcMain.handle("clipboard:copy-image-path", (_event, filePath: string) => {

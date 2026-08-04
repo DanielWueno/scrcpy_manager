@@ -104,7 +104,7 @@ export function useDeviceActions(
     // se abre una ventana propia apuntando al stream MJPEG, igual de movible que la
     // de scrcpy, en vez de embeber el video en el panel principal.
     if (active && mirrorUrl) {
-      window.mirrorApi?.open(mirrorUrl, `iOS Mirror - ${device.name ?? device.serial}`);
+      window.mirrorApi?.open(mirrorUrl, `iOS Mirror - ${device.name ?? device.serial}`, device.serial);
     } else {
       window.mirrorApi?.close();
     }

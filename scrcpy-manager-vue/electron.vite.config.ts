@@ -15,12 +15,23 @@ export default defineConfig({
   },
 
   // ── Preload script ────────────────────────────────────────────────────────
+  // Forzado a CJS: con "type": "module" en package.json, electron-vite emite el
+  // preload como .mjs por default - Electron no lo cargaba como modulo ("Cannot
+  // use import statement outside a module"), dejando contextBridge sin exponer
+  // nada (mirrorApi/dockApi/clipboardApi undefined en el renderer). CJS + nombre
+  // fijo evita la ambiguedad de resolucion de modulos de Node con "type": "module".
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
       outDir: "out/preload",
       lib: {
         entry: resolve(__dirname, "electron/preload/index.ts"),
+      },
+      rollupOptions: {
+        output: {
+          format: "cjs",
+          entryFileNames: "[name].js",
+        },
       },
     },
   },

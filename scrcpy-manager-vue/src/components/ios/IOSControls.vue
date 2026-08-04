@@ -80,6 +80,7 @@
     window.mirrorApi?.open(
       mirrorUrl.value,
       `iOS Mirror - ${props.device.name ?? props.device.serial}`,
+      props.device.serial,
     );
   }
 </script>
