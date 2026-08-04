@@ -8,14 +8,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-interface DockApi {
-  attach(
-    serial: string,
-    platform?: string,
-  ): Promise<{ success: boolean; error?: string }>;
-  detach(): Promise<{ success: boolean }>;
-}
-
 interface ClipboardApi {
   copyImagePath(
     filePath: string,
@@ -53,7 +45,6 @@ interface MirrorControlApi {
 }
 
 declare interface Window {
-  dockApi?: DockApi;
   clipboardApi?: ClipboardApi;
   mirrorApi?: MirrorApi;
   mirrorControlApi?: MirrorControlApi;

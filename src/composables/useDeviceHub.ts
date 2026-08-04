@@ -53,8 +53,6 @@ export function useDeviceHub(
     if (selectedDevice.value?.serial === serial) {
       selectedDevice.value.active = false;
     }
-    // Undock when scrcpy closes externally
-    window.dockApi?.detach();
     notify(`Mirror cerrado: ${serial}`, "info");
   });
 

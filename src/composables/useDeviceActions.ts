@@ -86,17 +86,7 @@ export function useDeviceActions(
     }
 
     if (platformFor(device) === "android") {
-      // scrcpy abre su propia ventana nativa - Electron se dockea al lado via HWND.
-      if (active) {
-        window.dockApi
-          ?.attach(device.serial, platformFor(device))
-          .then((r) => {
-            if (!r.success)
-              console.warn("[Dock] No se pudo hacer dock:", r.error);
-          });
-      } else {
-        window.dockApi?.detach();
-      }
+      // scrcpy abre su propia ventana nativa, independiente de la ventana principal.
       return;
     }
 

@@ -10,7 +10,6 @@ import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
 import * as http from "http";
 import * as https from "https";
-import { attachToMirror, detachFromMirror } from "./windowManager";
 import { openMirrorWindow, closeMirrorWindow } from "./mirrorWindow";
 
 let apiProcess: ChildProcess | null = null;
@@ -186,21 +185,6 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   await startApi();
   createWindow();
-
-  // ── IPC: dock window to the device mirror window (scrcpy or IosScreenCaptureTool) ──
-  ipcMain.handle(
-    "dock:attach",
-    async (_event, serial: string, platform?: string) => {
-      if (!mainWindow) return { success: false, error: "No window" };
-      const ok = await attachToMirror(mainWindow, serial, platform);
-      return { success: ok };
-    },
-  );
-
-  ipcMain.handle("dock:detach", () => {
-    detachFromMirror();
-    return { success: true };
-  });
 
   // ── IPC: iOS mirror (go-ios MJPEG) in its own floating window, like scrcpy ──
   ipcMain.handle(

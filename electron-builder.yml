@@ -14,10 +14,6 @@ files:
   - "!src/**"
   - "!electron/**"
 
-# Native modules must be unpacked from asar at runtime.
-asarUnpack:
-  - node_modules/koffi/**/*
-
 # Extra resources bundled alongside the app (not inside the asar)
 extraResources:
   - from: ../../Mobile.Remote.Toolkit.Api/publish
