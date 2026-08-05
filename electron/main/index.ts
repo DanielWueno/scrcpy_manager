@@ -250,6 +250,10 @@ app.whenReady().then(async () => {
     (_event, udid: string, name: string) =>
       postIOSAction(udid, "button", { name }),
   );
+
+  ipcMain.handle("mirror:screenshot", (_event, udid: string) =>
+    postIOSAction(udid, "screenshot", {}),
+  );
   // ──────────────────────────────────────────────────────────────────────────
 
   ipcMain.handle("clipboard:copy-image-path", (_event, filePath: string) => {

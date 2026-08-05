@@ -37,4 +37,5 @@ contextBridge.exposeInMainWorld("mirrorControlApi", {
     ipcRenderer.invoke("mirror:longpress", udid, x, y, durationMs),
   button: (udid: string, name: string) =>
     ipcRenderer.invoke("mirror:button", udid, name),
+  screenshot: (udid: string) => ipcRenderer.invoke("mirror:screenshot", udid),
 });

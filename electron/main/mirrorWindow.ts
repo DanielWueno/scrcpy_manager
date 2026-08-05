@@ -42,22 +42,37 @@ function buildMirrorHtml(streamUrl: string, title: string, udid: string): string
   #status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     color: #fff; font: 14px sans-serif; text-align: center; padding: 16px; pointer-events: none; }
   #buttons { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center;
-    gap: 8px; padding: 8px; background: rgba(0, 0, 0, 0.35); }
+    gap: 8px; padding: 8px; background: rgba(0, 0, 0, 0.35); transition: opacity 0.15s; }
+  #buttons.hidden { display: none; }
   #buttons button { flex: 0 0 auto; padding: 6px 12px; font: 12px sans-serif; color: #fff;
     background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px; cursor: pointer; }
   #buttons button:active { background: rgba(255, 255, 255, 0.35); }
+  /* Boton para ocultar/mostrar la barra de acciones antes de grabar pantalla (asi no
+     queda esa barra pegada en la grabacion). Discreto por default: opaco solo al hover. */
+  #toggleBar { position: absolute; top: 8px; right: 8px; z-index: 10; padding: 4px 8px;
+    font: 11px sans-serif; color: #fff; background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; cursor: pointer;
+    opacity: 0.35; transition: opacity 0.15s; }
+  #toggleBar:hover { opacity: 1; }
+  #toast { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.65); color: #fff; font: 12px sans-serif; padding: 6px 12px;
+    border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 10; }
+  #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
   <div id="wrap">
     <canvas id="mirror"></canvas>
     <div id="status">Conectando al mirror...</div>
+    <div id="toast"></div>
+    <button id="toggleBar" title="Ocultar/mostrar acciones rapidas">Ocultar</button>
     <div id="buttons">
       <button data-button="home">Home</button>
       <button data-button="volumeDown">Vol-</button>
       <button data-button="volumeUp">Vol+</button>
       <button data-button="lock">Lock</button>
+      <button data-action="screenshot">Captura</button>
     </div>
   </div>
   <script>
@@ -365,7 +380,35 @@ function buildMirrorHtml(streamUrl: string, title: string, udid: string): string
 
     document.getElementById("buttons").addEventListener("click", (event) => {
       const name = event.target?.dataset?.button;
-      if (name) window.mirrorControlApi?.button(udid, name);
+      if (name) {
+        window.mirrorControlApi?.button(udid, name);
+        return;
+      }
+      if (event.target?.dataset?.action === "screenshot") takeScreenshot();
+    });
+
+    const toast = document.getElementById("toast");
+    let toastTimer = null;
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1500);
+    }
+
+    async function takeScreenshot() {
+      const result = await window.mirrorControlApi?.screenshot(udid);
+      showToast(result?.success ? "Captura guardada" : (result?.message || result?.error || "Error al capturar"));
+    }
+
+    // Oculta la barra de acciones (Home/Vol/Lock/Captura) para que no aparezca al grabar
+    // la pantalla con otra herramienta - visible por default, el usuario la oculta cuando
+    // la necesite.
+    const buttonsBar = document.getElementById("buttons");
+    const toggleBar = document.getElementById("toggleBar");
+    toggleBar.addEventListener("click", () => {
+      const hidden = buttonsBar.classList.toggle("hidden");
+      toggleBar.textContent = hidden ? "Mostrar" : "Ocultar";
     });
 
     window.addEventListener("beforeunload", () => {

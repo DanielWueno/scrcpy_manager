@@ -42,6 +42,7 @@ interface MirrorControlApi {
     durationMs: number,
   ): Promise<{ success: boolean; error?: string }>;
   button(udid: string, name: string): Promise<{ success: boolean; error?: string }>;
+  screenshot(udid: string): Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
 declare interface Window {
