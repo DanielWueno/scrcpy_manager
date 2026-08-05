@@ -103,6 +103,11 @@ async function startApi(): Promise<void> {
   console.log("[Electron] Starting API:", apiExe);
 
   apiProcess = spawn(apiExe, [], {
+    // Sin esto, ASP.NET Core usa el cwd del proceso que lo lanza (Electron) como content root
+    // para ubicar appsettings.json - en una instalacion real ese cwd no es la carpeta del .exe
+    // (depende de desde donde Windows abrio el acceso directo), asi que appsettings.json no se
+    // encontraba y IOS:Mirror:Mode caia al default "external".
+    cwd: join(process.resourcesPath, "api"),
     detached: false,
     stdio: "ignore",
     env: {

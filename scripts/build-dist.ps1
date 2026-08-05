@@ -34,7 +34,7 @@ if (-not $SkipApi) {
 }
 
 # Verificar que el publish existe
-$publishDir = Resolve-Path "$root\..\..\Mobile.Remote.Toolkit.Api\publish" -ErrorAction SilentlyContinue
+$publishDir = Resolve-Path "$root\..\Mobile.Remote.Toolkit.Api\publish" -ErrorAction SilentlyContinue
 if (-not $publishDir) {
     Write-Error "No se encontró el directorio publish del API. Ejecuta sin --skip-api primero."
     exit 1

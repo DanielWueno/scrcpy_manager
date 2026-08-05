@@ -7,10 +7,10 @@
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path $PSScriptRoot -Parent
-$apiProject = Resolve-Path "$root\..\..\Mobile.Remote.Toolkit.Api\Mobile.Remote.Toolkit\Mobile.Remote.Toolkit.Api.csproj"
-$publishOut = Resolve-Path "$root\..\..\Mobile.Remote.Toolkit.Api\publish" -ErrorAction SilentlyContinue
+$apiProject = Resolve-Path "$root\..\Mobile.Remote.Toolkit.Api\Mobile.Remote.Toolkit\Mobile.Remote.Toolkit.Api.csproj"
+$publishOut = Resolve-Path "$root\..\Mobile.Remote.Toolkit.Api\publish" -ErrorAction SilentlyContinue
 if (-not $publishOut) {
-    $publishOut = "$root\..\..\Mobile.Remote.Toolkit.Api\publish"
+    $publishOut = "$root\..\Mobile.Remote.Toolkit.Api\publish"
 }
 
 Write-Host "[publish] Publishing .NET API to: $publishOut" -ForegroundColor Cyan
@@ -30,4 +30,4 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[publish] Done. Output: $publishOut" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next step: cd scrcpy-manager-vue && pnpm electron:dist" -ForegroundColor Yellow
+Write-Host "Next step: pnpm electron:dist" -ForegroundColor Yellow

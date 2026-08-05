@@ -16,7 +16,7 @@ files:
 
 # Extra resources bundled alongside the app (not inside the asar)
 extraResources:
-  - from: ../../Mobile.Remote.Toolkit.Api/publish
+  - from: ../Mobile.Remote.Toolkit.Api/publish
     to: api
     filter:
       - "**/*"
@@ -28,6 +28,9 @@ win:
   verifyUpdateCodeSignature: false
   target:
     - target: nsis
+      arch:
+        - x64
+    - target: portable
       arch:
         - x64
 
