@@ -47,14 +47,29 @@
         <v-icon class="mr-2">mdi-open-in-new</v-icon>
         Abrir ventana del mirror
       </v-btn>
+
+      <!-- Enrola el UDID en App Store Connect, re-firma el .ipa en el Mac remoto e
+           instala DeviceKit via go-ios - flujo bajo demanda, no se detecta ausencia
+           automáticamente (ver receta de la Fase 9). -->
+      <v-btn
+        variant="tonal"
+        block
+        class="mt-4"
+        :loading="installingDeviceKit"
+        @click="installDeviceKit"
+      >
+        <v-icon class="mr-2">mdi-cellphone-arrow-down</v-icon>
+        Instalar DeviceKit
+      </v-btn>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, ref } from "vue";
   import type { Device } from "../../types/common";
   import type { IOSDeviceStatus } from "../../types/ios";
+  import { iosApi } from "../../services/iosApi";
 
   interface Props {
     device: Device;
@@ -65,6 +80,7 @@
   const props = defineProps<Props>();
   const emit = defineEmits<{
     "execute-action": [action: string, payload?: any];
+    notify: [message: string, color?: string];
   }>();
 
   const toggleMirror = () => {
@@ -82,5 +98,19 @@
       `iOS Mirror - ${props.device.name ?? props.device.serial}`,
       props.device.serial,
     );
+  }
+
+  const installingDeviceKit = ref(false);
+
+  async function installDeviceKit() {
+    installingDeviceKit.value = true;
+    try {
+      const result = await iosApi.installDeviceKit(props.device.serial);
+      emit("notify", result.message || "Instalación finalizada", result.success ? "success" : "error");
+    } catch {
+      emit("notify", "Error al instalar DeviceKit", "error");
+    } finally {
+      installingDeviceKit.value = false;
+    }
   }
 </script>

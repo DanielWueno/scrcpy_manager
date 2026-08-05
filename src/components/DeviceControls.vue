@@ -44,6 +44,7 @@
       @execute-action="
         (action, payload) => $emit('execute-action', action, payload)
       "
+      @notify="(message, color) => $emit('notify', message, color)"
     />
   </div>
 </template>

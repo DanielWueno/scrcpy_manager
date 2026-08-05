@@ -66,4 +66,15 @@ export const iosApi = {
     );
     return response.data;
   },
+
+  // Enrola el UDID en App Store Connect (si hace falta), re-firma el .ipa en el Mac
+  // remoto y lo instala via go-ios — puede tardar bastante más que un install normal.
+  async installDeviceKit(udid: string): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>(
+      `/ios/devices/${udid}/devicekit/install`,
+      undefined,
+      { timeout: 180000 },
+    );
+    return response.data;
+  },
 };

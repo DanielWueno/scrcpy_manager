@@ -47,6 +47,7 @@
               :deviceStatus="selectedDeviceStatus"
               :actionLoading="actionLoading"
               @execute-action="executeDeviceAction"
+              @notify="(message, color) => showNotification(message, color)"
             />
           </v-col>
         </v-row>
