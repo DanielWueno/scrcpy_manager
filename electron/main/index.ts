@@ -205,7 +205,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 960,
     minHeight: 600,
-    title: "Mobile Remote Toolkit",
+    title: "Mobile Remote Toolkit - powered by Wueno BP",
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
