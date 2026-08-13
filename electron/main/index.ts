@@ -14,6 +14,7 @@ import { openMirrorWindow, closeMirrorWindow } from "./mirrorWindow";
 
 let apiProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
+let splashWindow: BrowserWindow | null = null;
 
 const isDev = !app.isPackaged;
 const API_PORT = 59399;
@@ -142,6 +143,62 @@ function killApi(): void {
   }
 }
 
+// Se muestra de inmediato al abrir la app (antes de esperar la API .NET y de cargar el
+// renderer) para que el doble-clic tenga feedback visual instantaneo - sin esto, mientras
+// startApi() espera hasta 30s, no aparece nada en pantalla y parece que la app no abrio.
+function createSplashWindow(): void {
+  splashWindow = new BrowserWindow({
+    width: 320,
+    height: 180,
+    frame: false,
+    resizable: false,
+    movable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: true,
+    backgroundColor: "#1e1e2e",
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  splashWindow.loadURL(
+    "data:text/html;charset=utf-8," +
+      encodeURIComponent(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; height: 100%; background: #1e1e2e; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    font-family: "Segoe UI", sans-serif; color: #cdd6f4; }
+  .spinner { width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid rgba(205, 214, 244, 0.2); border-top-color: #89b4fa;
+    animation: spin 0.8s linear infinite; margin-bottom: 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  p { margin: 0; font-size: 13px; opacity: 0.85; }
+</style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p>Iniciando Mobile Remote Toolkit...</p>
+</body>
+</html>`),
+  );
+
+  splashWindow.on("closed", () => {
+    splashWindow = null;
+  });
+}
+
+function closeSplashWindow(): void {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.close();
+  }
+  splashWindow = null;
+}
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -161,6 +218,16 @@ function createWindow(): void {
   });
 
   mainWindow.once("ready-to-show", () => {
+    closeSplashWindow();
+    mainWindow?.show();
+  });
+
+  // Si la carga falla (p. ej. falta un asset), "ready-to-show" nunca dispara y el splash
+  // se quedaria girando para siempre - mejor mostrar la ventana (aunque este en blanco)
+  // que dejar al usuario viendo un splash colgado sin ningun indicio del error.
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
+    console.error("[Electron] did-fail-load:", errorCode, errorDescription);
+    closeSplashWindow();
     mainWindow?.show();
   });
 
@@ -188,6 +255,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  createSplashWindow();
   await startApi();
   createWindow();
 
